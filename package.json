@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Experimental query editor",
   "scripts": {
-    "start": "webpack serve --mode=development",
+    "start": "webpack serve --mode=development --hot",
     "build": "webpack --mode=production"
   },
   "repository": {
