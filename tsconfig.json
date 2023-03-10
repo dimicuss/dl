@@ -6,7 +6,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "jsx": "react",
+    "jsx": "react-jsx",
     "allowUmdGlobalAccess": true
   },
   "$schema": "https://json.schemastore.org/tsconfig",
