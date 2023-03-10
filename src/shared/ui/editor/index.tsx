@@ -19,9 +19,18 @@ const initialState = {
             content: [
               {
                 type: 'entity',
+              },
+              {
+                type: 'operator',
+              },
+              {
+                type: 'value',
+                content: [
+                  {type: 'text', text: 'Initial text'}
+                ]
               }
             ]
-          }
+          },
         ]
       }
     ]
