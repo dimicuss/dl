@@ -1,35 +1,54 @@
 const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
 const {ProvidePlugin} = require('webpack')
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
-module.exports = {
-  entry: './src/index.tsx',
-  module: {
-    rules: [
-      {
-        test: /\.tsx?$/,
-        use: 'ts-loader',
-        exclude: /node_modules/,
-      },
+module.exports = (env, argv) => {
+  const dev = argv.mode !== "production";
+  return {
+    entry: './src/index.tsx',
+    module: {
+      rules: [
+       
+        {
+          test: /\.tsx?$/i,
+          use: 'ts-loader',
+          exclude: /node_modules/,
+        },
+        {
+          test: /\.css$/i,
+          use: [
+            dev ? 'style-loader' : MiniCssExtractPlugin.loader,
+            {
+              loader: 'css-loader',
+              options: {
+                modules: true,
+              }
+            },
+            'postcss-loader',
+          ],
+        },
+      ],
+    },
+    plugins: [
+      new HtmlWebpackPlugin({
+        title: 'Query editor',
+      }),
+      new ProvidePlugin({
+        React: 'react'
+      }),
+      new MiniCssExtractPlugin()
     ],
-  },
-  plugins: [
-    new HtmlWebpackPlugin({
-      title: 'Query editor',
-    }),
-    new ProvidePlugin({
-      React: 'react'
-    })
-  ],
-  resolve: {
-    extensions: ['.tsx', '.ts', '.js'],
-  },
-  output: {
-    filename: 'bundle.js',
-    path: path.resolve(__dirname, 'dist'),
-  },
-  devServer: {
-    compress: true,
-    port: 9000,
-  },
-};
+    resolve: {
+      extensions: ['.tsx', '.ts', '.js'],
+    },
+    output: {
+      filename: 'bundle.js',
+      path: path.resolve(__dirname, 'dist'),
+    },
+    devServer: {
+      compress: true,
+      port: 9000,
+    },
+  };
+}
