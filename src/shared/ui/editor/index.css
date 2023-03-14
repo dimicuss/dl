@@ -1,3 +1,23 @@
-.paragraph {
+.entity {
+    color: blue;
+}
+
+.operator {
+    color: green;
+}
+
+.value {
     color: red;
+}
+
+.l_brace, .r_brace {
+    color: purple;
+}
+
+.log_operator {
+    color: violet;
+}
+
+.paragraph {
+    margin: 0;
 }

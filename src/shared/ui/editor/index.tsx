@@ -5,44 +5,66 @@ import {keymap} from "prosemirror-keymap"
 import {undo, redo, history} from "prosemirror-history"
 import {Schema} from "prosemirror-model"
 import {baseKeymap} from "prosemirror-commands"
-
 import styles from './index.css'
 
 const initialState = {
-  doc: {
-    type: 'doc',
-    content: [
+  "doc": {
+    "type": "doc",
+    "content": [
       {
-        type: 'paragraph',
-        content: [
+        "type": "paragraph",
+        "content": [
           {
-            type: 'entity',
-          },
-          {
-            type: 'operator',
-          },
-          {
-            type: 'value',
-            content: [
-              {type: 'text', text: 'Initial text'}
+            "type": "text",
+            "text": "Entity",
+            "marks": [
+              {
+                "type": "entity"
+              }
             ]
-          }
+          },
+          {
+            "type": "text",
+            "text": "&",
+            "marks": [
+              {
+                "type": "operator"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": 'Value',
+            "marks": [
+              {
+                "type": "value"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": ' Prompt',
+          },
         ]
       },
       {
-        type: 'paragraph',
-        content: [
-          {type: 'text', text: 'Some text'}
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Prompt"
+          }
         ]
       }
     ]
   },
-  selection: {
-    type: "text",
-    anchor: 17,
-    head: 0
+  "selection": {
+    "type": "text",
+    "anchor": 1,
+    "head": 1
   }
 }
+
 
 export const Editor = () => {
   const ref = useRef<HTMLDivElement | null>(null)
@@ -50,50 +72,43 @@ export const Editor = () => {
 
 
   useEffect(() => {
+    const schema = new Schema({
+      nodes: {
+        'doc': {
+          content: 'paragraph+'
+        },
+        'paragraph': {
+          content: 'text*',
+          marks: '_',
+          toDOM: () => ['p', {class: styles.paragraph}, 0],
+        },
+        'text': {inline: true}
+      },
+      marks: {
+        'log_operator': {
+          toDOM: ({}) => ['span', {class: styles.log_operator}, 0],
+        },
+        'l_brace': {
+          toDOM: () => ['span', {class: styles.l_brace}, 0],
+        },
+        'r_brace': {
+          toDOM: () => ['span', {class: styles.r_brace}, 0],
+        },
+        'entity': {
+          toDOM: () => ['span', {class: styles.entity}, 0],
+        },
+        'operator': {
+          toDOM: () => ['span', {class: styles.operator}, 0],
+        },
+        'value': {
+          toDOM: () => ['span', {class: styles.value}, 0],
+        },
+      }
+    })
+
     const view = new EditorView(ref.current, {
       state: EditorState.fromJSON({
-        schema: new Schema({
-          nodes: {
-            'doc': {
-              content: 'paragraph*'
-            },
-            'paragraph': {
-              content: '(log_operator | l_brace | r_brace | entity | operator | value | text)*',
-              toDOM: () => ['p', {class: styles.paragraph}, 0],
-            },
-            'log_operator': {
-              atom: true,
-              inline: true,
-              toDOM: ({}) => ['span', {class: 'log_operator'}, '']
-            },
-            'l_brace': {
-              atom: true,
-              inline: true,
-              toDOM: () => ['span', {class: 'l_brace'}, '(']
-            },
-            'r_brace': {
-              atom: true,
-              inline: true,
-              toDOM: () => ['span', {class: 'r_brace'}, ')']
-            },
-            'entity': {
-              atom: true,
-              inline: true,
-              toDOM: () => ['span', {class: 'entity'}, 0]
-            },
-            'operator': {
-              atom: true,
-              inline: true,
-              toDOM: () => ['span', {class: 'operator'}, 0]
-            },
-            'value': {
-              content: 'text*',
-              inline: true,
-              toDOM: () => ['span', {class: 'value'}, 0]
-            },
-            'text': {}
-          }
-        }),
+        schema: schema,
         plugins: [
           history(),
           keymap({
@@ -104,8 +119,8 @@ export const Editor = () => {
         ],
       }, initialState),
       dispatchTransaction(t) {
+        console.log(t)
         const newState = view.state.apply(t)
-        console.log(newState.toJSON())
         view.updateState(newState)
       }
     })
