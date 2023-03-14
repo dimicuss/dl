@@ -7,6 +7,10 @@ import {Schema} from "prosemirror-model"
 import {baseKeymap} from "prosemirror-commands"
 import styles from './index.css'
 
+// Валидация и автодополнение
+// При заполнени построчно считывать текст (каждая строка - отдельное выражение) и парсить по синтаксическому дереву,
+// далее по полученным ренджам выделять соотвествия нужными тегами + предлагать автодополнение
+
 const initialState = {
   "doc": {
     "type": "doc",
@@ -52,8 +56,11 @@ const initialState = {
         "content": [
           {
             "type": "text",
-            "text": "Prompt"
-          }
+            "text": "Prompt",
+            "marks": [
+              {"type": "value"}
+            ]
+          },
         ]
       }
     ]
@@ -65,62 +72,63 @@ const initialState = {
   }
 }
 
-
 export const Editor = () => {
   const ref = useRef<HTMLDivElement | null>(null)
   const editorRef = useRef<EditorView | null>(null)
 
-
   useEffect(() => {
     const schema = new Schema({
       nodes: {
-        'doc': {
-          content: 'paragraph+'
+        doc: {
+          content: 'paragraph+',
+          toDom: () => ['div', {class: styles.doc}, 0]
         },
-        'paragraph': {
+        paragraph: {
           content: 'text*',
           marks: '_',
           toDOM: () => ['p', {class: styles.paragraph}, 0],
         },
-        'text': {inline: true}
+        text: {}
       },
       marks: {
-        'log_operator': {
-          toDOM: () => ['span', {class: styles.log_operator}],
+        brace: {
+          toDOM: () => ['span', {class: styles.brace}],
         },
-        'l_brace': {
-          toDOM: () => ['span', {class: styles.l_brace}],
-        },
-        'r_brace': {
-          toDOM: () => ['span', {class: styles.r_brace}],
-        },
-        'entity': {
+        entity: {
           toDOM: () => ['span', {class: styles.entity}],
         },
-        'operator': {
+        operator: {
           toDOM: () => ['span', {class: styles.operator}],
         },
-        'value': {
+        value: {
           toDOM: () => ['span', {class: styles.value}],
         },
       }
     })
 
+    const plugins = [
+      history(),
+      keymap({
+        ...baseKeymap,
+        'Mod-z': undo,
+        'Mod-y': redo,
+      }),
+    ]
+
     const view = new EditorView(ref.current, {
       state: EditorState.fromJSON({
-        schema: schema,
-        plugins: [
-          history(),
-          keymap({
-            ...baseKeymap,
-            'Mod-z': undo,
-            'Mod-y': redo,
-          }),
-        ],
+        schema,
+        plugins,
       }, initialState),
       dispatchTransaction(t) {
-        const newState = view.state.apply(t)
-        console.log(newState.doc.content.toJSON())
+        const {content} = t.doc
+        const {size} = content
+
+        const newState = view.state.apply(
+          t
+            .removeMark(0, size)
+            .addMark(0, size, schema.marks.entity.create())
+        )
         view.updateState(newState)
       }
     })
@@ -134,5 +142,5 @@ export const Editor = () => {
 
 
 
-  return <div ref={ref}></div>
+  return <div ref={ref} />
 }

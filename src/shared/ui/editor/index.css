@@ -10,14 +10,13 @@
     color: red;
 }
 
-.l_brace, .r_brace {
+.brace {
     color: purple;
 }
 
-.log_operator {
-    color: violet;
+.paragraph + .paragraph {
+    border-top: 1px solid gray;
+    padding-top: 20px;
+    margin: 0 0 20px 0;
 }
 
-.paragraph {
-    margin: 0;
-}

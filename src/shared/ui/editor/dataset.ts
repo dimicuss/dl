@@ -20,7 +20,7 @@ export const operators = [
     value: 'eq'
   },
   {
-    label: 'Не равно',
+    label: 'Не-равно',
     value: 'not_eq'
   },
   {
@@ -32,7 +32,7 @@ export const operators = [
     value: 'less'
   },
   {
-    label: 'больше-равно',
+    label: 'Больше-равно',
     value: 'more_eq'
   },
   {
