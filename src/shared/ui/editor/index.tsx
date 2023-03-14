@@ -86,22 +86,22 @@ export const Editor = () => {
       },
       marks: {
         'log_operator': {
-          toDOM: ({}) => ['span', {class: styles.log_operator}, 0],
+          toDOM: () => ['span', {class: styles.log_operator}],
         },
         'l_brace': {
-          toDOM: () => ['span', {class: styles.l_brace}, 0],
+          toDOM: () => ['span', {class: styles.l_brace}],
         },
         'r_brace': {
-          toDOM: () => ['span', {class: styles.r_brace}, 0],
+          toDOM: () => ['span', {class: styles.r_brace}],
         },
         'entity': {
-          toDOM: () => ['span', {class: styles.entity}, 0],
+          toDOM: () => ['span', {class: styles.entity}],
         },
         'operator': {
-          toDOM: () => ['span', {class: styles.operator}, 0],
+          toDOM: () => ['span', {class: styles.operator}],
         },
         'value': {
-          toDOM: () => ['span', {class: styles.value}, 0],
+          toDOM: () => ['span', {class: styles.value}],
         },
       }
     })
@@ -119,8 +119,8 @@ export const Editor = () => {
         ],
       }, initialState),
       dispatchTransaction(t) {
-        console.log(t)
         const newState = view.state.apply(t)
+        console.log(newState.doc.content.toJSON())
         view.updateState(newState)
       }
     })
