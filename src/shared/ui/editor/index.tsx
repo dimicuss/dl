@@ -6,6 +6,7 @@ import {undo, redo, history} from "prosemirror-history"
 import {Schema} from "prosemirror-model"
 import {baseKeymap} from "prosemirror-commands"
 import styles from './index.css'
+import {parseDocText} from "../../lib/parseDocText"
 
 // Валидация и автодополнение
 // При заполнени построчно считывать текст (каждая строка - отдельное выражение) и парсить по синтаксическому дереву,
@@ -20,35 +21,8 @@ const initialState = {
         "content": [
           {
             "type": "text",
-            "text": "Entity",
-            "marks": [
-              {
-                "type": "entity"
-              }
-            ]
-          },
-          {
-            "type": "text",
-            "text": "&",
-            "marks": [
-              {
-                "type": "operator"
-              }
-            ]
-          },
-          {
-            "type": "text",
-            "text": 'Value',
-            "marks": [
-              {
-                "type": "value"
-              }
-            ]
-          },
-          {
-            "type": "text",
-            "text": ' Prompt',
-          },
+            "text": "(Фамилия = Жмыщенко || Отчество = Альбертович) И Имя = Валерий",
+          }
         ]
       },
       {
@@ -57,9 +31,6 @@ const initialState = {
           {
             "type": "text",
             "text": "Prompt",
-            "marks": [
-              {"type": "value"}
-            ]
           },
         ]
       }
@@ -121,14 +92,13 @@ export const Editor = () => {
         plugins,
       }, initialState),
       dispatchTransaction(t) {
-        const {content} = t.doc
-        const {size} = content
+        const newState = view.state.apply(t)
 
-        const newState = view.state.apply(
-          t
-            .removeMark(0, size)
-            .addMark(0, size, schema.marks.entity.create())
-        )
+        const {doc} = newState
+        console.log(parseDocText(doc).map(({start, end, text}) => {
+          return doc.textBetween(start, end) === text
+        }))
+
         view.updateState(newState)
       }
     })

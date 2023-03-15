@@ -16,27 +16,27 @@ export const entities = [
 
 export const operators = [
   {
-    label: 'Равно',
+    label: '=',
     value: 'eq'
   },
   {
-    label: 'Не-равно',
+    label: '!=',
     value: 'not_eq'
   },
   {
-    label: 'Больше',
+    label: '>',
     value: 'more'
   },
   {
-    label: 'Меньше',
+    label: '<',
     value: 'less'
   },
   {
-    label: 'Больше-равно',
+    label: '>=',
     value: 'more_eq'
   },
   {
-    label: 'Меньше-равно',
+    label: '<=',
     value: 'less_eq'
   },
   {
@@ -48,7 +48,7 @@ export const operators = [
     value: 'or'
   },
   {
-    label: 'Не',
+    label: 'Нет',
     value: 'not'
   },
 ]
