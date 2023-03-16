@@ -6,7 +6,7 @@ import {undo, redo, history} from "prosemirror-history"
 import {Schema} from "prosemirror-model"
 import {baseKeymap} from "prosemirror-commands"
 import styles from './index.css'
-import {parseDocText} from "../../lib/parseDocText"
+import {getChars} from "../../lib/getChars"
 
 // Валидация и автодополнение
 // При заполнени построчно считывать текст (каждая строка - отдельное выражение) и парсить по синтаксическому дереву,
@@ -93,13 +93,10 @@ export const Editor = () => {
       }, initialState),
       dispatchTransaction(t) {
         const newState = view.state.apply(t)
-
-        const {doc} = newState
-        console.log(parseDocText(doc).map(({start, end, text}) => {
-          return doc.textBetween(start, end) === text
-        }))
-
         view.updateState(newState)
+        console.log(
+          getChars(t.doc)
+        )
       }
     })
 

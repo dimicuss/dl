@@ -1,6 +1,8 @@
 import {createRoot} from 'react-dom/client'
 import {Editor} from './shared/ui/editor'
 
+import './shared/lib/getTokens'
+
 const App = () => {
   return <Editor />
 }
