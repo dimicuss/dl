@@ -5,8 +5,12 @@ import {keymap} from "prosemirror-keymap"
 import {undo, redo, history} from "prosemirror-history"
 import {Schema} from "prosemirror-model"
 import {baseKeymap} from "prosemirror-commands"
+import {getCharPositions} from "../../lib/getChars"
+import {getTokens} from "../../lib/getTokens"
+import {Tokens} from "../../types/editor"
+
 import styles from './index.css'
-import {getChars} from "../../lib/getChars"
+import {colorize} from "../../lib/colorize"
 
 // Валидация и автодополнение
 // При заполнени построчно считывать текст (каждая строка - отдельное выражение) и парсить по синтаксическому дереву,
@@ -21,7 +25,7 @@ const initialState = {
         "content": [
           {
             "type": "text",
-            "text": "(Фамилия = Жмыщенко || Отчество = Альбертович) И Имя = Валерий",
+            "text": "(Фамилия = Жмыщенко | Отчество = Альбертович) & Имя = Валерий",
           }
         ]
       },
@@ -62,17 +66,23 @@ export const Editor = () => {
         text: {}
       },
       marks: {
-        brace: {
-          toDOM: () => ['span', {class: styles.brace}],
+        [Tokens.Delimiter]: {
+          toDOM: () => ['span', {class: styles[Tokens.Delimiter]}],
         },
-        entity: {
-          toDOM: () => ['span', {class: styles.entity}],
+        [Tokens.Keyword]: {
+          toDOM: () => ['span', {class: styles[Tokens.Keyword]}],
         },
-        operator: {
-          toDOM: () => ['span', {class: styles.operator}],
+        [Tokens.Operator]: {
+          toDOM: () => ['span', {class: styles[Tokens.Operator]}],
         },
-        value: {
-          toDOM: () => ['span', {class: styles.value}],
+        [Tokens.Identifier]: {
+          toDOM: () => ['span', {class: styles[Tokens.Identifier]}],
+        },
+        [Tokens.Number]: {
+          toDOM: () => ['span', {class: styles[Tokens.Number]}],
+        },
+        [Tokens.Invalid]: {
+          toDOM: () => ['span', {class: styles[Tokens.Invalid]}],
         },
       }
     })
@@ -92,13 +102,11 @@ export const Editor = () => {
         plugins,
       }, initialState),
       dispatchTransaction(t) {
-        const newState = view.state.apply(t)
-        view.updateState(newState)
-        console.log(
-          getChars(t.doc)
-        )
+        view.updateState(view.state.apply(colorize(t, schema)))
       }
     })
+
+    view.dispatch(colorize(view.state.tr, schema))
 
     editorRef.current = view
 

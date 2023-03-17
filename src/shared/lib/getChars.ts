@@ -1,9 +1,9 @@
 import {Node} from "prosemirror-model";
-import {Char} from "../types/editor";
+import {CharPosition} from "../types/editor";
 import {blockSeparator} from "./tokens";
 
-export function getChars(doc: Node) {
-  let result: Char[] = []
+export function getCharPositions(doc: Node) {
+  let result: CharPosition[] = []
 
   doc.descendants((node, pos) => {
     if (node.isBlock && pos > 0) {

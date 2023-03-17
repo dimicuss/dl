@@ -1,4 +1,4 @@
-.entity {
+.keyword {
     color: blue;
 }
 
@@ -6,12 +6,21 @@
     color: green;
 }
 
-.value {
-    color: red;
+.identifier {
+    color: gold;
 }
 
-.brace {
-    color: purple;
+.invalid {
+    color: white;
+    background-color: red;
+}
+
+.delimiter {
+    color: brown;
+}
+
+.number {
+    color: yellow;
 }
 
 .paragraph + .paragraph {
