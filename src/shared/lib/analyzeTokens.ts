@@ -1,8 +1,4 @@
-import {Token, Tokens} from "../types/editor";
-
-const  =[
-  Tokens
-]
+import {Token} from "../types/editor";
 
 export function analyzeTokens(tokens: Token[]) {
   if (tokens.length) {
