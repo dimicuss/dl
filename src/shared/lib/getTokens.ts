@@ -9,7 +9,6 @@ function isDelimiter(c: Symbol) {
   return delimiters.includes(c) || isOperator(c as string)
 }
 
-
 function isIdentifier(str: string) {
   const char = str[0]
   return !(numbers.includes(char) || isDelimiter(char))
@@ -19,11 +18,9 @@ function isKeyword(c: string) {
   return keywords.includes(c)
 }
 
-
 function isNumber(str: string) {
   return numberRegEx.test(str)
 }
-
 
 function getSubChars(chars: CharPosition[], left: number, right: number) {
   const subChars: CharPosition[] = []
@@ -52,7 +49,6 @@ function getToken(charRange: CharRange, type: Tokens): Token {
   }
 }
 
-
 export function getTokens(chars: CharPosition[]) {
   let left = 0
   let right = 0
@@ -77,7 +73,7 @@ export function getTokens(chars: CharPosition[]) {
 
       right++;
       left = right;
-    } else if (isDelimiter(char) && left != right || (right == len && left != right)) {
+    } else if (isDelimiter(char) && left !== right || right === len && left !== right) {
       const subChars = getSubChars(chars, left, right - 1);
       const charRange = getCharRange(subChars)
       const subStr = charRange.range
@@ -101,6 +97,8 @@ export function getTokens(chars: CharPosition[]) {
       left = right;
     }
   }
+
+  console.log(result)
 
   return result
 }

@@ -5,8 +5,6 @@ import {keymap} from "prosemirror-keymap"
 import {undo, redo, history} from "prosemirror-history"
 import {Schema} from "prosemirror-model"
 import {baseKeymap} from "prosemirror-commands"
-import {getCharPositions} from "../../lib/getChars"
-import {getTokens} from "../../lib/getTokens"
 import {Tokens} from "../../types/editor"
 
 import styles from './index.css'
@@ -102,7 +100,7 @@ export const Editor = () => {
         plugins,
       }, initialState),
       dispatchTransaction(t) {
-        view.updateState(view.state.apply(colorize(t, schema)))
+        view.updateState(view.state.apply(t.docChanged ? colorize(t, schema) : t))
       }
     })
 

@@ -20,6 +20,11 @@ export enum Tokens {
   Invalid = 'invalid'
 }
 
+export enum ComplexToken {
+  LeftParenthese = 'left-parenthese',
+  RightParenthese = 'right-parenthese',
+}
+
 export interface Token {
   type: Tokens
   charRange: CharRange
