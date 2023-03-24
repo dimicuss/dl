@@ -93,8 +93,10 @@ export const Editor = () => {
         'Mod-y': redo,
       }),
     ]
-
     const view = new EditorView(ref.current, {
+      attributes: {
+        class: styles.doc
+      },
       state: EditorState.fromJSON({
         schema,
         plugins,

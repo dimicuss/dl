@@ -23,9 +23,8 @@
     color: yellow;
 }
 
-.paragraph + .paragraph {
-    border-top: 1px solid gray;
-    padding-top: 20px;
-    margin: 0 0 20px 0;
+.doc {
+    outline: none;
 }
+
 
