@@ -1,17 +1,28 @@
 import {CharPosition, CharRange, Symbol, Token, Tokens} from "../types/editor";
-import {delimiters, keywords, numbers, operators, numberRegEx} from "./tokens";
+import {keywords, operators, numberRegEx, lineBreak, whiteSpace, identifierRegEx, rBrace, lBrace} from "./tokens";
 
-function isOperator(c: Symbol) {
-  return operators.includes(c)
+function isRBrace(c: Symbol) {
+  return c === lBrace
+}
+
+function isLBrace(c: Symbol) {
+  return c === rBrace
+}
+
+function isWhiteSpace(c: Symbol) {
+  return c === whiteSpace
+}
+
+function isLineBreak(c: Symbol) {
+  return c === lineBreak
 }
 
 function isDelimiter(c: Symbol) {
-  return delimiters.includes(c) || isOperator(c as string)
+  return isWhiteSpace(c) || isLineBreak(c) || isRBrace(c) || isLBrace(c)
 }
 
 function isIdentifier(str: string) {
-  const char = str[0]
-  return !(numbers.includes(char) || isDelimiter(char))
+  return identifierRegEx.test(str)
 }
 
 function isKeyword(c: string) {
@@ -20,6 +31,10 @@ function isKeyword(c: string) {
 
 function isNumber(str: string) {
   return numberRegEx.test(str)
+}
+
+function isOperator(c: string) {
+  return operators.includes(c)
 }
 
 function getSubChars(chars: CharPosition[], left: number, right: number) {
@@ -60,25 +75,41 @@ export function getTokens(chars: CharPosition[]) {
     const char = currentCharP.char
     const previousChar = chars[right - 1]?.char
 
-    if (!isDelimiter(char))
-      right++;
+    if (!isDelimiter(char)) {
+      right++
+    }
 
-    if (isDelimiter(char) && left == right) {
+    if (isDelimiter(char) && left === right) {
       const charRange = getCharRange([currentCharP])
-      if (isOperator(char)) {
-        result.push(getToken(charRange, Tokens.Operator))
-      } else {
-        result.push(getToken(charRange, Tokens.Delimiter))
+
+      if (isLineBreak(char)) {
+        result.push(getToken(charRange, Tokens.LineBreak))
       }
 
-      right++;
-      left = right;
+      if (isWhiteSpace(char)) {
+        result.push(getToken(charRange, Tokens.WhiteSpace))
+      }
+
+      if (isRBrace(char)) {
+        result.push(getToken(charRange, Tokens.RBrace))
+      }
+
+      if (isLBrace(char)) {
+        result.push(getToken(charRange, Tokens.LBrace))
+      }
+
+      right++
+      left = right
     } else if (isDelimiter(char) && left !== right || right === len && left !== right) {
       const subChars = getSubChars(chars, left, right - 1);
       const charRange = getCharRange(subChars)
       const subStr = charRange.range
 
-      if (isKeyword(subStr)) {
+      if (isOperator(subStr)) {
+        result.push(getToken(charRange, Tokens.Operator))
+      }
+
+      else if (isKeyword(subStr)) {
         result.push(getToken(charRange, Tokens.Keyword))
       }
 
@@ -86,19 +117,17 @@ export function getTokens(chars: CharPosition[]) {
         result.push(getToken(charRange, Tokens.Number))
       }
 
-      else if (isIdentifier(subStr) && !isDelimiter(previousChar)) {
+      else if (isIdentifier(subStr)) {
         result.push(getToken(charRange, Tokens.Identifier))
       }
 
-      else if (!isIdentifier(subStr) && !isDelimiter(previousChar)) {
+      else {
         result.push(getToken(charRange, Tokens.Invalid))
       }
 
-      left = right;
+      left = right
     }
   }
-
-  console.log(result)
 
   return result
 }

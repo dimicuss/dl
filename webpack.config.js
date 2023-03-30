@@ -9,14 +9,13 @@ module.exports = (env, argv) => {
     entry: './src/index.tsx',
     module: {
       rules: [
-       
         {
-          test: /\.tsx?$/i,
+          test: /\.tsx?$/,
           use: 'ts-loader',
           exclude: /node_modules/,
         },
         {
-          test: /\.css$/i,
+          test: /\.css$/,
           use: [
             dev ? 'style-loader' : MiniCssExtractPlugin.loader,
             {
@@ -25,8 +24,18 @@ module.exports = (env, argv) => {
                 modules: true,
               }
             },
+            'postcss-loader'
+          ],
+          exclude: /node_modules/
+        },
+        {
+          test: /\.css$/,
+          use: [
+            dev ? 'style-loader' : MiniCssExtractPlugin.loader,
+            'css-loader',
             'postcss-loader',
           ],
+          include: /node_modules/
         },
       ],
     },

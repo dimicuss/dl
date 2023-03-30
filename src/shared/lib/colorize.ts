@@ -1,12 +1,10 @@
 import {Schema} from "prosemirror-model"
 import {Transaction} from "prosemirror-state"
-import {analyzeTokens} from "./analyzeTokens"
 import {getCharPositions} from "./getChars"
 import {getTokens} from "./getTokens"
 
 export function colorize(t: Transaction, schema: Schema) {
   const tokens = getTokens(getCharPositions(t.doc))
-  analyzeTokens(tokens)
   return tokens.reduce((t, token) => {
     const {type, charRange} = token
     const {start, end} = charRange

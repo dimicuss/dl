@@ -1,4 +1,6 @@
-export type Symbol = string | {}
+export type LineBreak = {}
+
+export type Symbol = string | LineBreak
 
 export interface CharPosition {
   pos: number
@@ -12,17 +14,15 @@ export interface CharRange {
 }
 
 export enum Tokens {
-  Delimiter = 'delimiter',
   Identifier = 'identifier',
   Operator = 'operator',
   Number = 'number',
   Keyword = 'keyword',
-  Invalid = 'invalid'
-}
-
-export enum ComplexToken {
-  LeftParenthese = 'left-parenthese',
-  RightParenthese = 'right-parenthese',
+  Invalid = 'invalid',
+  LBrace = 'l_brace',
+  RBrace = 'r_brace',
+  LineBreak = 'line_break',
+  WhiteSpace = 'white_space'
 }
 
 export interface Token {

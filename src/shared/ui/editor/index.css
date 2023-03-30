@@ -15,16 +15,14 @@
     background-color: red;
 }
 
-.delimiter {
-    color: brown;
-}
-
 .number {
-    color: yellow;
+    color: purple;
 }
 
 .doc {
     outline: none;
 }
 
-
+.l_brace, .r_brace {
+    color: brown;
+}

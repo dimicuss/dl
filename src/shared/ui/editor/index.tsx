@@ -9,6 +9,7 @@ import {Tokens} from "../../types/editor"
 
 import styles from './index.css'
 import {colorize} from "../../lib/colorize"
+import 'prosemirror-view/style/prosemirror.css'
 
 // Валидация и автодополнение
 // При заполнени построчно считывать текст (каждая строка - отдельное выражение) и парсить по синтаксическому дереву,
@@ -64,14 +65,23 @@ export const Editor = () => {
         text: {}
       },
       marks: {
-        [Tokens.Delimiter]: {
-          toDOM: () => ['span', {class: styles[Tokens.Delimiter]}],
+        [Tokens.LBrace]: {
+          toDOM: () => ['span', {class: styles[Tokens.LBrace]}],
+        },
+        [Tokens.RBrace]: {
+          toDOM: () => ['span', {class: styles[Tokens.RBrace]}],
         },
         [Tokens.Keyword]: {
           toDOM: () => ['span', {class: styles[Tokens.Keyword]}],
         },
+        [Tokens.LineBreak]: {
+          toDOM: () => ['span', {class: styles[Tokens.LineBreak]}],
+        },
         [Tokens.Operator]: {
           toDOM: () => ['span', {class: styles[Tokens.Operator]}],
+        },
+        [Tokens.WhiteSpace]: {
+          toDOM: () => ['span', {class: styles[Tokens.WhiteSpace]}],
         },
         [Tokens.Identifier]: {
           toDOM: () => ['span', {class: styles[Tokens.Identifier]}],

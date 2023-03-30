@@ -1,6 +1,6 @@
 import {Node} from "prosemirror-model";
 import {CharPosition} from "../types/editor";
-import {blockSeparator} from "./tokens";
+import {lineBreak} from "./tokens";
 
 export function getCharPositions(doc: Node) {
   let result: CharPosition[] = []
@@ -9,7 +9,7 @@ export function getCharPositions(doc: Node) {
     if (node.isBlock && pos > 0) {
       result.push({
         pos,
-        char: blockSeparator
+        char: lineBreak
       })
     }
 
