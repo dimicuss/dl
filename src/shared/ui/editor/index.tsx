@@ -11,10 +11,6 @@ import styles from './index.css'
 import {colorize} from "../../lib/colorize"
 import 'prosemirror-view/style/prosemirror.css'
 
-// Валидация и автодополнение
-// При заполнени построчно считывать текст (каждая строка - отдельное выражение) и парсить по синтаксическому дереву,
-// далее по полученным ренджам выделять соотвествия нужными тегами + предлагать автодополнение
-
 const initialState = {
   "doc": {
     "type": "doc",
@@ -77,8 +73,23 @@ export const Editor = () => {
         [Tokens.LineBreak]: {
           toDOM: () => ['span', {class: styles[Tokens.LineBreak]}],
         },
-        [Tokens.Operator]: {
-          toDOM: () => ['span', {class: styles[Tokens.Operator]}],
+        [Tokens.Eq]: {
+          toDOM: () => ['span', {class: styles[Tokens.Eq]}],
+        },
+        [Tokens.NotEq]: {
+          toDOM: () => ['span', {class: styles[Tokens.NotEq]}],
+        },
+        [Tokens.MoreEq]: {
+          toDOM: () => ['span', {class: styles[Tokens.MoreEq]}],
+        },
+        [Tokens.LessEq]: {
+          toDOM: () => ['span', {class: styles[Tokens.LessEq]}],
+        },
+        [Tokens.And]: {
+          toDOM: () => ['span', {class: styles[Tokens.And]}],
+        },
+        [Tokens.Or]: {
+          toDOM: () => ['span', {class: styles[Tokens.Or]}],
         },
         [Tokens.WhiteSpace]: {
           toDOM: () => ['span', {class: styles[Tokens.WhiteSpace]}],

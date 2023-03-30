@@ -15,14 +15,19 @@ export interface CharRange {
 
 export enum Tokens {
   Identifier = 'identifier',
-  Operator = 'operator',
   Number = 'number',
   Keyword = 'keyword',
   Invalid = 'invalid',
   LBrace = 'l_brace',
   RBrace = 'r_brace',
   LineBreak = 'line_break',
-  WhiteSpace = 'white_space'
+  WhiteSpace = 'white_space',
+  Eq = 'eq',
+  NotEq = 'not_eq',
+  MoreEq = 'more_eq',
+  LessEq = 'less_eq',
+  And = 'and',
+  Or = 'or'
 }
 
 export interface Token {

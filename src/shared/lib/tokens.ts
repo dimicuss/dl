@@ -1,10 +1,15 @@
-import {LineBreak} from '../types/editor'
+import {LineBreak, Symbol} from '../types/editor'
 
 export const lineBreak: LineBreak = {}
-
 export const lBrace = '('
 export const rBrace = ')'
 export const whiteSpace = ' '
+export const delimieters: Symbol[] = [
+  lBrace,
+  rBrace,
+  whiteSpace,
+  lineBreak
+]
 
 export const keywords = [
   'Фамилия',
@@ -12,6 +17,12 @@ export const keywords = [
   'Отчество',
 ]
 
+export const eq = '='
+export const notEq = '!='
+export const moreEq = '>='
+export const lessEq = '<='
+export const and = '&'
+export const or = '|'
 export const operators = [
   '=',
   '!=',

@@ -1,22 +1,25 @@
-.keyword {
-    color: blue;
+p {
+    color: white;
 }
 
-.operator {
-    color: green;
+.keyword {
+    background-color: blue;
+}
+
+.eq, .not_eq, .less_eq, .more_eq, .and, .or {
+    background-color: green;
 }
 
 .identifier {
-    color: gold;
+    background-color: gold;
 }
 
 .invalid {
-    color: white;
     background-color: red;
 }
 
 .number {
-    color: purple;
+    background-color: purple;
 }
 
 .doc {
@@ -24,5 +27,5 @@
 }
 
 .l_brace, .r_brace {
-    color: brown;
+    background-color: brown;
 }

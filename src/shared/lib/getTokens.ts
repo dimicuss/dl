@@ -1,24 +1,8 @@
 import {CharPosition, CharRange, Symbol, Token, Tokens} from "../types/editor";
-import {keywords, operators, numberRegEx, lineBreak, whiteSpace, identifierRegEx, rBrace, lBrace} from "./tokens";
-
-function isRBrace(c: Symbol) {
-  return c === lBrace
-}
-
-function isLBrace(c: Symbol) {
-  return c === rBrace
-}
-
-function isWhiteSpace(c: Symbol) {
-  return c === whiteSpace
-}
-
-function isLineBreak(c: Symbol) {
-  return c === lineBreak
-}
+import {keywords, operators, numberRegEx, lineBreak, whiteSpace, identifierRegEx, rBrace, lBrace, delimieters, eq, notEq, moreEq, lessEq, and, or} from "./tokens";
 
 function isDelimiter(c: Symbol) {
-  return isWhiteSpace(c) || isLineBreak(c) || isRBrace(c) || isLBrace(c)
+  return delimieters.includes(c)
 }
 
 function isIdentifier(str: string) {
@@ -73,7 +57,6 @@ export function getTokens(chars: CharPosition[]) {
   while (right < len && left <= right) {
     const currentCharP = chars[right]
     const char = currentCharP.char
-    const previousChar = chars[right - 1]?.char
 
     if (!isDelimiter(char)) {
       right++
@@ -82,19 +65,19 @@ export function getTokens(chars: CharPosition[]) {
     if (isDelimiter(char) && left === right) {
       const charRange = getCharRange([currentCharP])
 
-      if (isLineBreak(char)) {
+      if (char === lineBreak) {
         result.push(getToken(charRange, Tokens.LineBreak))
       }
 
-      if (isWhiteSpace(char)) {
+      if (char === whiteSpace) {
         result.push(getToken(charRange, Tokens.WhiteSpace))
       }
 
-      if (isRBrace(char)) {
+      if (char === rBrace) {
         result.push(getToken(charRange, Tokens.RBrace))
       }
 
-      if (isLBrace(char)) {
+      if (char === lBrace) {
         result.push(getToken(charRange, Tokens.LBrace))
       }
 
@@ -106,7 +89,29 @@ export function getTokens(chars: CharPosition[]) {
       const subStr = charRange.range
 
       if (isOperator(subStr)) {
-        result.push(getToken(charRange, Tokens.Operator))
+        if (subStr === eq) {
+          result.push(getToken(charRange, Tokens.Eq))
+        }
+
+        if (subStr === notEq) {
+          result.push(getToken(charRange, Tokens.NotEq))
+        }
+
+        if (subStr === moreEq) {
+          result.push(getToken(charRange, Tokens.MoreEq))
+        }
+
+        if (subStr === lessEq) {
+          result.push(getToken(charRange, Tokens.LessEq))
+        }
+
+        if (subStr === and) {
+          result.push(getToken(charRange, Tokens.And))
+        }
+
+        if (subStr === or) {
+          result.push(getToken(charRange, Tokens.Or))
+        }
       }
 
       else if (isKeyword(subStr)) {
