@@ -3,7 +3,7 @@ import {EditorState} from "prosemirror-state"
 import {EditorView} from "prosemirror-view"
 import {keymap} from "prosemirror-keymap"
 import {undo, redo, history} from "prosemirror-history"
-import {Schema} from "prosemirror-model"
+import {MarkSpec, Schema} from "prosemirror-model"
 import {baseKeymap} from "prosemirror-commands"
 import {Tokens} from "../../types/editor"
 
@@ -47,7 +47,15 @@ export const Editor = () => {
   const editorRef = useRef<EditorView | null>(null)
 
   useEffect(() => {
+    const marks = Object.values(Tokens).reduce((acc, token) => ({
+      ...acc,
+      [token]: {
+        toDOM: () => ['span', {class: styles[token]}],
+      }
+    }), {} as MarkSpec)
+
     const schema = new Schema({
+      marks,
       nodes: {
         doc: {
           content: 'paragraph+',
@@ -60,50 +68,6 @@ export const Editor = () => {
         },
         text: {}
       },
-      marks: {
-        [Tokens.LBrace]: {
-          toDOM: () => ['span', {class: styles[Tokens.LBrace]}],
-        },
-        [Tokens.RBrace]: {
-          toDOM: () => ['span', {class: styles[Tokens.RBrace]}],
-        },
-        [Tokens.Keyword]: {
-          toDOM: () => ['span', {class: styles[Tokens.Keyword]}],
-        },
-        [Tokens.LineBreak]: {
-          toDOM: () => ['span', {class: styles[Tokens.LineBreak]}],
-        },
-        [Tokens.Eq]: {
-          toDOM: () => ['span', {class: styles[Tokens.Eq]}],
-        },
-        [Tokens.NotEq]: {
-          toDOM: () => ['span', {class: styles[Tokens.NotEq]}],
-        },
-        [Tokens.MoreEq]: {
-          toDOM: () => ['span', {class: styles[Tokens.MoreEq]}],
-        },
-        [Tokens.LessEq]: {
-          toDOM: () => ['span', {class: styles[Tokens.LessEq]}],
-        },
-        [Tokens.And]: {
-          toDOM: () => ['span', {class: styles[Tokens.And]}],
-        },
-        [Tokens.Or]: {
-          toDOM: () => ['span', {class: styles[Tokens.Or]}],
-        },
-        [Tokens.WhiteSpace]: {
-          toDOM: () => ['span', {class: styles[Tokens.WhiteSpace]}],
-        },
-        [Tokens.Identifier]: {
-          toDOM: () => ['span', {class: styles[Tokens.Identifier]}],
-        },
-        [Tokens.Number]: {
-          toDOM: () => ['span', {class: styles[Tokens.Number]}],
-        },
-        [Tokens.Invalid]: {
-          toDOM: () => ['span', {class: styles[Tokens.Invalid]}],
-        },
-      }
     })
 
     const plugins = [
