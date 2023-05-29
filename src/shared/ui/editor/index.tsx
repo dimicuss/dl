@@ -20,19 +20,10 @@ const initialState = {
         "content": [
           {
             "type": "text",
-            "text": "(Фамилия = Жмыщенко | Отчество = Альбертович) & Имя = Валерий",
+            "text": "Фамилия = Жмыщенко",
           }
         ]
       },
-      {
-        "type": "paragraph",
-        "content": [
-          {
-            "type": "text",
-            "text": "Prompt",
-          },
-        ]
-      }
     ]
   },
   "selection": {
@@ -59,7 +50,7 @@ export const Editor = () => {
       nodes: {
         doc: {
           content: 'paragraph+',
-          toDom: () => ['div', {class: styles.doc}, 0]
+          toDom: () => ['div', 0]
         },
         paragraph: {
           content: 'text*',

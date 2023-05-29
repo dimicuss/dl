@@ -3,7 +3,7 @@ import {CharPosition} from "../types/editor";
 import {lineBreak} from "./tokens";
 
 export function getCharPositions(doc: Node) {
-  let result: CharPosition[] = []
+  const result: CharPosition[] = []
 
   doc.descendants((node, pos) => {
     if (node.isBlock && pos > 0) {

@@ -21,16 +21,10 @@ export const eq = '='
 export const notEq = '!='
 export const moreEq = '>='
 export const lessEq = '<='
+export const more = '>'
+export const less = '<'
 export const and = '&'
 export const or = '|'
-export const operators = [
-  '=',
-  '!=',
-  '>=',
-  '<=',
-  '&',
-  '|',
-]
 
 export const numberRegEx = /^-?\d+(\.\d+)?$/
 

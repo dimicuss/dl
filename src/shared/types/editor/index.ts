@@ -24,13 +24,27 @@ export enum Tokens {
   WhiteSpace = 'white_space',
   Eq = 'eq',
   NotEq = 'not_eq',
+  More = 'more',
+  Less = 'less',
   MoreEq = 'more_eq',
   LessEq = 'less_eq',
   And = 'and',
   Or = 'or'
 }
 
-export interface Token {
+export enum Segments {
+  Expression = 'expression',
+  LogOperator = 'log_operator'
+}
+
+export interface TokenObject {
   type: Tokens
   charRange: CharRange
+}
+
+export interface SegmentObject {
+  type: Segments
+  tokens: TokenObject[]
+  left: TokenObject[]
+  error?: Error
 }

@@ -10,7 +10,7 @@ p {
     background-color: blue;
 }
 
-.eq, .not_eq, .less_eq, .more_eq, .and, .or {
+.eq, .not_eq, .less_eq, .more_eq, .and, .or, .less, .more {
     background-color: green;
 }
 

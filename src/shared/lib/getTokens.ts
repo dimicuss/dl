@@ -1,5 +1,5 @@
-import {CharPosition, CharRange, Symbol, Token, Tokens} from "../types/editor";
-import {keywords, operators, numberRegEx, lineBreak, whiteSpace, identifierRegEx, rBrace, lBrace, delimieters, eq, notEq, moreEq, lessEq, and, or} from "./tokens";
+import {CharPosition, CharRange, Symbol, TokenObject, Tokens} from "../types/editor";
+import {keywords, numberRegEx, lineBreak, whiteSpace, identifierRegEx, rBrace, lBrace, delimieters, eq, notEq, moreEq, lessEq, and, or, more, less} from "./tokens";
 
 function isDelimiter(c: Symbol) {
   return delimieters.includes(c)
@@ -15,10 +15,6 @@ function isKeyword(c: string) {
 
 function isNumber(str: string) {
   return numberRegEx.test(str)
-}
-
-function isOperator(c: string) {
-  return operators.includes(c)
 }
 
 function getSubChars(chars: CharPosition[], left: number, right: number) {
@@ -41,7 +37,7 @@ function getCharRange(chars: CharPosition[]): CharRange {
   }
 }
 
-function getToken(charRange: CharRange, type: Tokens): Token {
+function getToken(charRange: CharRange, type: Tokens): TokenObject {
   return {
     type,
     charRange
@@ -52,7 +48,7 @@ export function getTokens(chars: CharPosition[]) {
   let left = 0
   let right = 0
   let len = chars.length
-  const result: Token[] = []
+  const result: TokenObject[] = []
 
   while (right < len && left <= right) {
     const currentCharP = chars[right]
@@ -88,30 +84,37 @@ export function getTokens(chars: CharPosition[]) {
       const charRange = getCharRange(subChars)
       const subStr = charRange.range
 
-      if (isOperator(subStr)) {
-        if (subStr === eq) {
-          result.push(getToken(charRange, Tokens.Eq))
-        }
 
-        if (subStr === notEq) {
-          result.push(getToken(charRange, Tokens.NotEq))
-        }
+      if (subStr === eq) {
+        result.push(getToken(charRange, Tokens.Eq))
+      }
 
-        if (subStr === moreEq) {
-          result.push(getToken(charRange, Tokens.MoreEq))
-        }
+      else if (subStr === notEq) {
+        result.push(getToken(charRange, Tokens.NotEq))
+      }
 
-        if (subStr === lessEq) {
-          result.push(getToken(charRange, Tokens.LessEq))
-        }
+      else if (subStr === more) {
+        result.push(getToken(charRange, Tokens.More))
+      }
 
-        if (subStr === and) {
-          result.push(getToken(charRange, Tokens.And))
-        }
+      else if (subStr === less) {
+        result.push(getToken(charRange, Tokens.Less))
+      }
 
-        if (subStr === or) {
-          result.push(getToken(charRange, Tokens.Or))
-        }
+      else if (subStr === moreEq) {
+        result.push(getToken(charRange, Tokens.MoreEq))
+      }
+
+      else if (subStr === lessEq) {
+        result.push(getToken(charRange, Tokens.LessEq))
+      }
+
+      else if (subStr === and) {
+        result.push(getToken(charRange, Tokens.And))
+      }
+
+      else if (subStr === or) {
+        result.push(getToken(charRange, Tokens.Or))
       }
 
       else if (isKeyword(subStr)) {
