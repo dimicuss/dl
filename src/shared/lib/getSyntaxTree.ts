@@ -1,4 +1,5 @@
 import {CItem} from '@shared/types/circulize'
+import {chainCommands} from 'prosemirror-commands';
 import {ExpressionObject, TokenObject, Tokens, Expression} from "../types/editor";
 import {circulize} from "./circulize";
 
@@ -10,10 +11,10 @@ const secondArgTokens = [
   Tokens.String, Tokens.Number
 ]
 
-function getEquation(cToken: CItem<TokenObject>): ExpressionResult {
-  const cSecond = cToken?.n
-  const cThird = cToken?.n?.n
-  const first = cToken?.i
+function getEqExpression(cToken: CItem<TokenObject>): ExpressionResult | undefined {
+  const cSecond = cToken.n
+  const cThird = cToken.n?.n
+  const first = cToken.i
   const second = cSecond?.i
   const third = cThird?.i
 
@@ -76,32 +77,88 @@ function getEquation(cToken: CItem<TokenObject>): ExpressionResult {
     }
   }
 
-  return {
-    next: cToken
-  }
+  return undefined
 }
 
-export function getSyntaxTree(tokens: TokenObject[]) {
-  const expressions: ExpressionObject[] = []
-  let cToken = circulize(tokens)
 
-  while (cToken) {
-    const {next, expression} = getEquation(cToken)
+function getAndExpression(cToken: CItem<TokenObject>, previousExpression?: ExpressionObject): ExpressionResult | undefined {
+  const first = cToken.i
+  const cSecond = cToken?.n
 
-    if (expression) {
-      expressions.push(expression)
-      cToken = next
-    } else {
-      cToken = next?.n
+  if (first.type === Tokens.And) {
+    if (previousExpression) {
+      if (cSecond) {
+        const result = getEqExpression(cSecond)
+
+        if (result) {
+          return {
+            expression: {
+              type: Expression.And,
+              closed: true,
+              children: [previousExpression, result.expression]
+            },
+            next: result.next
+          }
+        }
+
+        return {
+          expression: {
+            type: Expression.And,
+            closed: false,
+            comment: 'Right handed arg is not eq expression',
+            children: [previousExpression]
+          },
+          next: cSecond
+        }
+      }
+
+
+      return {
+        expression: {
+          type: Expression.And,
+          closed: false,
+          comment: 'Undexpected end of input',
+          children: [previousExpression]
+        },
+        next: cSecond
+      }
+    }
+
+    return {
+      expression: {
+        type: Expression.And,
+        closed: false,
+        comment: 'Left handed arg not defined',
+        children: []
+      },
+      next: cSecond
     }
   }
 
-  return expressions
+  return undefined
+}
+
+export function getSyntaxTree(tokens: TokenObject[]) {
+  let cToken = circulize(tokens)
+  let previousExpression: ExpressionObject | undefined
+
+  while (cToken) {
+    const result = getEqExpression(cToken) || getAndExpression(cToken, previousExpression)
+
+    if (result) {
+      previousExpression = result.expression
+      cToken = result.next
+    } else {
+      cToken = cToken.n
+    }
+  }
+
+  return previousExpression
 }
 
 
 interface ExpressionResult {
-  expression?: ExpressionObject
+  expression: ExpressionObject
   next?: CItem<TokenObject>
 }
 
