@@ -1,12 +1,12 @@
 import {CharPosition, CharRange, Symbol, TokenObject, Tokens} from "../types/editor";
-import {keywords, numberRegEx, lineBreak, whiteSpace, identifierRegEx, rBrace, lBrace, delimieters, eq, notEq, moreEq, lessEq, and, or, more, less} from "./tokens";
+import {keywords, numberRegEx, lineBreak, stringRegEx, rBrace, lBrace, delimieters, eq, notEq, moreEq, lessEq, and, or, more, less} from "./tokens";
 
 function isDelimiter(c: Symbol) {
   return delimieters.includes(c)
 }
 
-function isIdentifier(str: string) {
-  return identifierRegEx.test(str)
+function isString(str: string) {
+  return stringRegEx.test(str)
 }
 
 function isKeyword(c: string) {
@@ -65,10 +65,6 @@ export function getTokens(chars: CharPosition[]) {
         result.push(getToken(charRange, Tokens.LineBreak))
       }
 
-      if (char === whiteSpace) {
-        result.push(getToken(charRange, Tokens.WhiteSpace))
-      }
-
       if (char === rBrace) {
         result.push(getToken(charRange, Tokens.RBrace))
       }
@@ -125,8 +121,8 @@ export function getTokens(chars: CharPosition[]) {
         result.push(getToken(charRange, Tokens.Number))
       }
 
-      else if (isIdentifier(subStr)) {
-        result.push(getToken(charRange, Tokens.Identifier))
+      else if (isString(subStr)) {
+        result.push(getToken(charRange, Tokens.String))
       }
 
       else {

@@ -28,4 +28,4 @@ export const or = '|'
 
 export const numberRegEx = /^-?\d+(\.\d+)?$/
 
-export const identifierRegEx = /^[a-zA-Zа-яА-Я]+$/
+export const stringRegEx = /^[a-zA-Zа-яА-Я]+$/

@@ -14,7 +14,7 @@ export interface CharRange {
 }
 
 export enum Tokens {
-  Identifier = 'identifier',
+  String = 'string',
   Number = 'number',
   Keyword = 'keyword',
   Invalid = 'invalid',
@@ -34,7 +34,9 @@ export enum Tokens {
 
 export enum Segments {
   Expression = 'expression',
-  LogOperator = 'log_operator'
+  LogOperator = 'log_operator',
+  RBrace = 'r_brace',
+  LBrace = 'l_brace'
 }
 
 export interface TokenObject {
@@ -48,3 +50,19 @@ export interface SegmentObject {
   left: TokenObject[]
   error?: Error
 }
+
+export enum Expression {
+  Eq = 'eq',
+  Or = 'or',
+  And = 'and',
+  Braced = 'braced'
+}
+
+export interface ExpressionObject {
+  type: Expression
+  tokens?: TokenObject[]
+  children?: ExpressionObject[]
+  closed: boolean
+  comment?: string
+}
+

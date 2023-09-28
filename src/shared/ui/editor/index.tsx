@@ -20,7 +20,7 @@ const initialState = {
         "content": [
           {
             "type": "text",
-            "text": "Фамилия = Жмыщенко",
+            "text": "Фамилия = Пятерников & Имя = Дмитрий & Отчество = Васильевич",
           }
         ]
       },
@@ -35,7 +35,6 @@ const initialState = {
 
 export const Editor = () => {
   const ref = useRef<HTMLDivElement | null>(null)
-  const editorRef = useRef<EditorView | null>(null)
 
   useEffect(() => {
     const marks = Object.values(Tokens).reduce((acc, token) => ({
@@ -84,10 +83,8 @@ export const Editor = () => {
 
     view.dispatch(colorize(view.state.tr, schema))
 
-    editorRef.current = view
-
     return () => {
-      editorRef.current?.destroy()
+      view.destroy()
     }
   }, [])
 

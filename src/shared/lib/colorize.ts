@@ -1,13 +1,15 @@
 import {Schema} from "prosemirror-model"
 import {Transaction} from "prosemirror-state"
-import {analyzeTokens} from "./analyzeTokens"
+import {getSyntaxTree} from "./getSyntaxTree"
 import {getCharPositions} from "./getChars"
 import {getTokens} from "./getTokens"
 
 export function colorize(t: Transaction, schema: Schema) {
   const tokens = getTokens(getCharPositions(t.doc))
 
-  analyzeTokens(tokens)
+  const tree = getSyntaxTree(tokens)
+
+  console.log(tree)
 
   return tokens.reduce((t, token) => {
     const {type, charRange} = token
