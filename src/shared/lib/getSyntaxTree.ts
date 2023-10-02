@@ -1,5 +1,4 @@
 import {CItem} from '@shared/types/circulize'
-import {chainCommands} from 'prosemirror-commands';
 import {ExpressionObject, TokenObject, Tokens, Expression} from "../types/editor";
 import {circulize} from "./circulize";
 
@@ -7,29 +6,60 @@ const equationTokens = [
   Tokens.Less, Tokens.More, Tokens.LessEq, Tokens.MoreEq, Tokens.Eq, Tokens.NotEq
 ]
 
-const secondArgTokens = [
-  Tokens.String, Tokens.Number
+const equationArgsTokens = [
+  Tokens.String, Tokens.Number, Tokens.Keyword
 ]
 
-function getEqExpression(cToken: CItem<TokenObject>): ExpressionResult | undefined {
-  const cSecond = cToken.n
-  const cThird = cToken.n?.n
-  const first = cToken.i
-  const second = cSecond?.i
-  const third = cThird?.i
+const equationArgMap = new Map([
+  [Tokens.Keyword, [Tokens.String, Tokens.Number]],
+  [Tokens.String, [Tokens.Keyword]],
+  [Tokens.Number, [Tokens.Keyword]]
+])
 
-  if (first.type === Tokens.Keyword) {
-    if (second) {
-      if (equationTokens.includes(second.type)) {
-        if (third) {
-          if (secondArgTokens.includes(third.type)) {
+function getEqExpression(cToken?: CItem<TokenObject>): ExpressionResult | undefined {
+  if (cToken) {
+    const cNext = cToken.n
+    const cPrevious = cToken.p
+
+    const token = cToken.i
+    const nextToken = cNext?.i
+    const previousToken = cPrevious?.i
+
+    if (equationTokens.includes(token.type)) {
+      if (previousToken) {
+        if (!equationArgsTokens.includes(previousToken.type)) {
+          return {
+            expression: {
+              type: Expression.Eq,
+              closed: false,
+              tokens: [previousToken, token],
+              comment: `First token is invalid. Type: "${previousToken.type}"`,
+            },
+            next: cNext
+          }
+        }
+
+        if (nextToken) {
+          if (!equationArgsTokens.includes(nextToken.type)) {
+            return {
+              expression: {
+                type: Expression.Eq,
+                closed: false,
+                tokens: [previousToken, token, nextToken],
+                comment: `Second argument is invalid. Type: "${nextToken.type}"`,
+              },
+              next: cNext
+            }
+          }
+
+          if (equationArgMap.get(previousToken.type)?.includes(nextToken.type)) {
             return {
               expression: {
                 type: Expression.Eq,
                 closed: true,
-                tokens: [first, second, third],
+                tokens: [previousToken, token, nextToken],
               },
-              next: cThird.n
+              next: cNext.n
             }
           }
 
@@ -37,10 +67,10 @@ function getEqExpression(cToken: CItem<TokenObject>): ExpressionResult | undefin
             expression: {
               type: Expression.Eq,
               closed: false,
-              tokens: [first, second, third],
-              comment: `Second equation arg is not alphanum. Token is "${third.charRange.range}"`,
+              tokens: [previousToken, token, nextToken],
+              comment: `Arguments should be [Keyword, String | Number] or vice versa. 1st: "${previousToken.type}", 2nd: "${nextToken.type}"`,
             },
-            next: cThird.n
+            next: cNext.n
           }
         }
 
@@ -48,10 +78,10 @@ function getEqExpression(cToken: CItem<TokenObject>): ExpressionResult | undefin
           expression: {
             type: Expression.Eq,
             closed: false,
-            tokens: [first, second],
-            comment: 'Second equation arg is undefined',
+            tokens: [previousToken, token],
+            comment: `Undexpected end of input`,
           },
-          next: cThird
+          next: undefined
         }
       }
 
@@ -59,21 +89,11 @@ function getEqExpression(cToken: CItem<TokenObject>): ExpressionResult | undefin
         expression: {
           type: Expression.Eq,
           closed: false,
-          tokens: [first, second],
-          comment: `Unexpected equation token. Token is "${second.charRange.range}"`,
+          tokens: [token],
+          comment: 'First argument is not defined',
         },
-        next: cThird
+        next: cNext
       }
-    }
-
-    return {
-      expression: {
-        type: Expression.Eq,
-        closed: false,
-        tokens: [first],
-        comment: 'Equation token not defined',
-      },
-      next: cSecond
     }
   }
 
@@ -81,79 +101,86 @@ function getEqExpression(cToken: CItem<TokenObject>): ExpressionResult | undefin
 }
 
 
-function getAndExpression(cToken: CItem<TokenObject>, previousExpression?: ExpressionObject): ExpressionResult | undefined {
-  const first = cToken.i
-  const cSecond = cToken?.n
+function getAndExpression(cToken?: CItem<TokenObject>, previousExpression?: ExpressionObject): ExpressionResult | undefined {
+  if (cToken && cToken.i.type === Tokens.And) {
+    const cNext = cToken?.n
 
-  if (first.type === Tokens.And) {
+    const eqExpression = getEqExpression(cNext) || getEqExpression(cNext?.n)
+
+    const children: ExpressionObject[] = []
+
     if (previousExpression) {
-      if (cSecond) {
-        const result = getEqExpression(cSecond)
+      children.push(previousExpression)
+    }
 
-        if (result) {
-          return {
-            expression: {
-              type: Expression.And,
-              closed: true,
-              children: [previousExpression, result.expression]
-            },
-            next: result.next
-          }
-        }
-
-        return {
-          expression: {
-            type: Expression.And,
-            closed: false,
-            comment: 'Right handed arg is not eq expression',
-            children: [previousExpression]
-          },
-          next: cSecond
-        }
-      }
-
-
-      return {
-        expression: {
-          type: Expression.And,
-          closed: false,
-          comment: 'Undexpected end of input',
-          children: [previousExpression]
-        },
-        next: cSecond
-      }
+    if (eqExpression) {
+      children.push(eqExpression.expression)
     }
 
     return {
       expression: {
         type: Expression.And,
-        closed: false,
-        comment: 'Left handed arg not defined',
-        children: []
+        closed: true,
+        children
       },
-      next: cSecond
+      next: eqExpression?.next || cNext
+    }
+  }
+  return undefined
+}
+
+
+export function getOrExpression(cToken?: CItem<TokenObject>, previousExpression?: ExpressionObject): ExpressionResult | undefined {
+  if (cToken && cToken.i.type === Tokens.Or) {
+    const cNext = cToken?.n
+
+    const expression = _getSyntaxTree(cNext)
+
+    const children: ExpressionObject[] = []
+
+    if (previousExpression) {
+      children.push(previousExpression)
+    }
+
+    if (expression) {
+      children.push(expression)
+    }
+
+    return {
+      expression: {
+        type: Expression.Or,
+        closed: true,
+        children
+      },
+      next: undefined
     }
   }
 
   return undefined
 }
 
-export function getSyntaxTree(tokens: TokenObject[]) {
-  let cToken = circulize(tokens)
-  let previousExpression: ExpressionObject | undefined
 
-  while (cToken) {
-    const result = getEqExpression(cToken) || getAndExpression(cToken, previousExpression)
+function _getSyntaxTree(cToken?: CItem<TokenObject>, previousExpression?: ExpressionObject): ExpressionObject | undefined {
+  if (cToken) {
+    const result =
+      getAndExpression(cToken, previousExpression) ||
+      getOrExpression(cToken, previousExpression) ||
+      getEqExpression(cToken)
 
-    if (result) {
-      previousExpression = result.expression
-      cToken = result.next
-    } else {
-      cToken = cToken.n
-    }
+    return result
+      ? _getSyntaxTree(result.next, result?.expression)
+      : _getSyntaxTree(cToken.n, previousExpression)
   }
 
   return previousExpression
+}
+
+export function getSyntaxTree(tokens: TokenObject[]) {
+  const cToken = circulize(tokens)
+  const result = _getSyntaxTree(cToken)
+  console.log(result)
+
+  return result
 }
 
 

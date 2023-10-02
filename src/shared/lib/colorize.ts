@@ -9,8 +9,6 @@ export function colorize(t: Transaction, schema: Schema) {
 
   const tree = getSyntaxTree(tokens)
 
-  console.log(tree)
-
   return tokens.reduce((t, token) => {
     const {type, charRange} = token
     const {start, end} = charRange
