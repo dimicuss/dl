@@ -1,5 +1,13 @@
-body {
-    background-color: #010048;
+html, body {
+    all: unset;
+    height: 100vh;
+}
+
+.container {
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr;
 }
 
 p {
@@ -32,4 +40,12 @@ p {
 
 .l_brace, .r_brace {
     background-color: brown;
+}
+
+.editor {
+    background-color: #010048;
+}
+
+.serialization {
+
 }

@@ -61,7 +61,7 @@ export enum Expression {
 export interface ExpressionObject {
   type: Expression
   tokens?: TokenObject[]
-  children?: ExpressionObject[]
+  children: ExpressionObject[]
   closed: boolean
   comment?: string
 }
