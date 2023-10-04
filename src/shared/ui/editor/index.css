@@ -14,24 +14,25 @@ p {
     color: white;
 }
 
+
 .keyword {
-    background-color: blue;
+    color: gold;
 }
 
 .eq, .not_eq, .less_eq, .more_eq, .and, .or, .less, .more {
-    background-color: green;
+    color: red;
 }
 
 .string {
-    background-color: gold;
+    color: white;
 }
 
 .invalid {
-    background-color: red;
+    color: red;
 }
 
 .number {
-    background-color: purple;
+    color: purple;
 }
 
 .doc {
@@ -39,7 +40,7 @@ p {
 }
 
 .l_brace, .r_brace {
-    background-color: brown;
+    color: brown;
 }
 
 .editor {
