@@ -25,7 +25,7 @@ const initialState = {
         "content": [
           {
             "type": "text",
-            "text": "Возраст >= a & Отчество <= b & Фамилия != c & Имя = d |",
+            "text": "Возраст >= a & (Отчество <= b | (Фамилия != c) & Имя = d |",
           }
         ]
       },
@@ -53,7 +53,7 @@ const initialState = {
         "content": [
           {
             "type": "text",
-            "text": "Возраст != 27 | Имя = i",
+            "text": "Возраст < 27) | Имя = i",
           }
         ]
       },

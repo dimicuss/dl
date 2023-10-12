@@ -8,7 +8,7 @@ const equationTokens = new Map([
   [notEq, Expression.NotEq],
   [more, Expression.More],
   [less, Expression.Less],
-  [lessEq, Expression.Less],
+  [lessEq, Expression.LessEq],
   [moreEq, Expression.MoreEq]
 ])
 
@@ -22,8 +22,7 @@ const equationArgMap = new Map([
   [Tokens.Number, [Tokens.Keyword]]
 ])
 
-
-function getExpression(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionResult | undefined {
+function getExpression(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionObject[] | undefined {
   if (cToken) {
     const cNext = cToken.n
     const cPrevious = cToken.p
@@ -53,6 +52,9 @@ function getExpression(cToken?: CItem<TokenObject>, previousExpressions: Express
         if (!equationArgsTokens.includes(nextToken.type)) {
           comment.push(`Second argument is invalid. Type: "${nextToken.type}"`)
           next = cNext
+        } else if (previousToken && !equationArgMap.get(previousToken.type)?.includes(nextToken.type)) {
+          comment.push('Arguments should be [Keyword, String | Number] or vice versa. 1st: "${previousToken.type}", 2nd: "${nextToken.type}"')
+          next = cNext
         } else {
           tokens.push(nextToken)
           next = cNext.n
@@ -62,19 +64,12 @@ function getExpression(cToken?: CItem<TokenObject>, previousExpressions: Express
         next = cNext
       }
 
-      if (previousToken && nextToken && equationArgMap.get(previousToken.type)?.includes(nextToken.type)) {
-        comment.push('Arguments should be [Keyword, String | Number] or vice versa. 1st: "${previousToken.type}", 2nd: "${nextToken.type}"')
-      }
-
-      return {
-        expression: [...previousExpressions, {
-          type,
-          tokens,
-          comment,
-          closed: tokens.length > 1
-        }],
-        next,
-      }
+      return _getSyntaxTree(next, [...previousExpressions, {
+        type,
+        tokens,
+        comment,
+        closed: true
+      }])
     }
 
     return getExpression(cToken.n, previousExpressions)
@@ -84,7 +79,7 @@ function getExpression(cToken?: CItem<TokenObject>, previousExpressions: Express
 }
 
 
-function getAnd(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionResult | undefined {
+function getAnd(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionObject[] | undefined {
   if (cToken && cToken.i.type === Tokens.And) {
     const cNext = cToken.n
     const children: ExpressionObject[] = []
@@ -121,10 +116,7 @@ function getAnd(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObje
           children: [expression, ...restExpressions],
         }
 
-        return {
-          expression: [...previousExpressions.slice(0, -1), newOrExpression, ...nextRest],
-          next: undefined
-        }
+        return [...previousExpressions.slice(0, -1), newOrExpression, ...nextRest]
       } else if (nextExpression.type === Expression.And) {
         const nextChildren = nextExpression.children || []
         children.push(...nextChildren)
@@ -133,17 +125,14 @@ function getAnd(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObje
       }
     }
 
-    return {
-      expression: [...previousExpressions.slice(0, -1), expression, ...nextRest],
-      next: undefined
-    }
+    return [...previousExpressions.slice(0, -1), expression, ...nextRest]
   }
 
   return undefined
 }
 
 
-export function getOr(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionResult | undefined {
+export function getOr(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionObject[] | undefined {
   if (cToken && cToken.i.type === Tokens.Or) {
     const cNext = cToken?.n
     const children: ExpressionObject[] = []
@@ -169,10 +158,60 @@ export function getOr(cToken?: CItem<TokenObject>, previousExpressions: Expressi
       }
     }
 
-    return {
-      expression: [...previousExpressions.slice(0, -1), expression, ...nextRest],
-      next: undefined
+    return [...previousExpressions.slice(0, -1), expression, ...nextRest]
+  }
+
+  return undefined
+}
+
+
+function getLBrace(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionObject[] | undefined {
+  if (cToken && cToken.i.type === Tokens.LBrace) {
+    const expressions = _getSyntaxTree(cToken.n)
+
+
+    let rBraceFound = false
+    const children: ExpressionObject[] = []
+    const nextExpressions: ExpressionObject[] = []
+
+    for (let i = 0; i < expressions.length; i++) {
+      const child = expressions[i]
+
+      if (child.type === Expression.RBrace) {
+        rBraceFound = true
+        continue
+      }
+
+      if (rBraceFound) {
+        nextExpressions.push(child)
+      } else {
+        children.push(child)
+      }
     }
+
+    const expression: ExpressionObject = {
+      type: Expression.Braced,
+      closed: false,
+      children,
+    }
+
+    return [...previousExpressions, expression, ...nextExpressions]
+  }
+
+  return undefined
+}
+
+
+function getRBrace(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionObject[] | undefined {
+  if (cToken && cToken.i.type === Tokens.RBrace) {
+    const nextExpressions = _getSyntaxTree(cToken.n)
+
+    const expression: ExpressionObject = {
+      type: Expression.RBrace,
+      closed: true,
+    }
+
+    return [...previousExpressions, expression, ...nextExpressions]
   }
 
   return undefined
@@ -182,27 +221,22 @@ export function getOr(cToken?: CItem<TokenObject>, previousExpressions: Expressi
 function _getSyntaxTree(cToken?: CItem<TokenObject>, previousExpression: ExpressionObject[] = []): ExpressionObject[] {
   if (cToken) {
     const result =
+      getLBrace(cToken, previousExpression) ||
+      getRBrace(cToken, previousExpression) ||
       getAnd(cToken, previousExpression) ||
       getOr(cToken, previousExpression) ||
       getExpression(cToken, previousExpression)
 
-    return result
-      ? _getSyntaxTree(result.next, result?.expression)
-      : _getSyntaxTree(cToken.n, previousExpression)
+    return result || previousExpression
   }
 
   return previousExpression
 }
 
+
 export function getSyntaxTree(tokens: TokenObject[]) {
   const cToken = circulize(tokens)
   const result = _getSyntaxTree(cToken)
   return result
-}
-
-
-interface ExpressionResult {
-  expression: ExpressionObject[]
-  next?: CItem<TokenObject>
 }
 

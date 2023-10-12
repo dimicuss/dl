@@ -55,7 +55,8 @@ export enum Expression {
   LessEq = 'less_eq',
   Or = 'or',
   And = 'and',
-  Braced = 'braced'
+  Braced = 'braced',
+  RBrace = 'r_brace'
 }
 
 export interface ExpressionObject {
