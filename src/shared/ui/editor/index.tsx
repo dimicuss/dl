@@ -25,7 +25,7 @@ const initialState = {
         "content": [
           {
             "type": "text",
-            "text": "Возраст = a & Отчество = b & Фамилия = c & Имя = d |",
+            "text": "Возраст >= a & Отчество <= b & Фамилия != c & Имя = d |",
           }
         ]
       },
@@ -34,7 +34,7 @@ const initialState = {
         "content": [
           {
             "type": "text",
-            "text": "Фамилия = d",
+            "text": "Фамилия > d |",
           }
         ]
       },
@@ -43,7 +43,7 @@ const initialState = {
         "content": [
           {
             "type": "text",
-            "text": "Фамилия = f & Имя = g & Отчество = h",
+            "text": "Фамилия >= f & Имя = g & Отчество < h",
 
           }
         ]
@@ -53,7 +53,7 @@ const initialState = {
         "content": [
           {
             "type": "text",
-            "text": "Возраст = 27 | Имя = i",
+            "text": "Возраст != 27 | Имя = i",
           }
         ]
       },

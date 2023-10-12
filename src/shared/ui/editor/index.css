@@ -19,7 +19,7 @@ p {
     color: #66D9EF;
 }
 
-.eq, .not_eq, .less_eq, .more_eq, .and, .or, .less, .more {
+.expression, .and, .or {
     color: #E6256B;
 }
 

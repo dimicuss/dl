@@ -1,5 +1,5 @@
 import {CharPosition, CharRange, Symbol, TokenObject, Tokens} from "../types/editor";
-import {keywords, numberRegEx, stringRegEx, rBrace, lBrace, delimieters, eq, notEq, moreEq, lessEq, and, or, more, less} from "./tokens";
+import {keywords, numberRegEx, stringRegEx, rBrace, lBrace, delimieters, eq, notEq, moreEq, lessEq, and, or, more, less, expressionTokens} from "./tokens";
 
 function isDelimiter(c: Symbol) {
   return delimieters.includes(c)
@@ -76,29 +76,8 @@ export function getTokens(chars: CharPosition[]) {
       const charRange = getCharRange(subChars)
       const subStr = charRange.range
 
-
-      if (subStr === eq) {
-        result.push(getToken(charRange, Tokens.Eq))
-      }
-
-      else if (subStr === notEq) {
-        result.push(getToken(charRange, Tokens.NotEq))
-      }
-
-      else if (subStr === more) {
-        result.push(getToken(charRange, Tokens.More))
-      }
-
-      else if (subStr === less) {
-        result.push(getToken(charRange, Tokens.Less))
-      }
-
-      else if (subStr === moreEq) {
-        result.push(getToken(charRange, Tokens.MoreEq))
-      }
-
-      else if (subStr === lessEq) {
-        result.push(getToken(charRange, Tokens.LessEq))
+      if (expressionTokens.includes(subStr)) {
+        result.push(getToken(charRange, Tokens.Expression))
       }
 
       else if (subStr === and) {

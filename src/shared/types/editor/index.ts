@@ -22,12 +22,7 @@ export enum Tokens {
   RBrace = 'r_brace',
   LineBreak = 'line_break',
   WhiteSpace = 'white_space',
-  Eq = 'eq',
-  NotEq = 'not_eq',
-  More = 'more',
-  Less = 'less',
-  MoreEq = 'more_eq',
-  LessEq = 'less_eq',
+  Expression = 'expression',
   And = 'and',
   Or = 'or'
 }
@@ -53,6 +48,11 @@ export interface SegmentObject {
 
 export enum Expression {
   Eq = 'eq',
+  NotEq = 'not_eq',
+  More = 'more',
+  Less = 'less',
+  MoreEq = 'more_eq',
+  LessEq = 'less_eq',
   Or = 'or',
   And = 'and',
   Braced = 'braced'

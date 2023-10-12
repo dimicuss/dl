@@ -13,7 +13,7 @@ export function _serializeExpression(expression: ExpressionObject | undefined, n
         return acc + '\n' + ' '.repeat(n * spaceFactor) + _serializeExpression(child, n + 1)
       }, '') ||
       tokens.reduce((acc, child) => {
-        return acc + '\n' + ' '.repeat(n * spaceFactor) + child.charRange.range
+        return acc + ' ' + child.charRange.range
       }, '') ||
       ''
 
