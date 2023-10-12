@@ -16,23 +16,24 @@ p {
 
 
 .keyword {
-    color: gold;
+    color: #66D9EF;
 }
 
 .eq, .not_eq, .less_eq, .more_eq, .and, .or, .less, .more {
-    color: red;
+    color: #E6256B;
 }
 
 .string {
-    color: white;
+    color: #C0B863;
 }
 
 .invalid {
     color: red;
+    text-decoration: underline;
 }
 
 .number {
-    color: purple;
+    color: #AE81FF;
 }
 
 .doc {
@@ -44,9 +45,8 @@ p {
 }
 
 .editor {
-    background-color: #010048;
+    background-color: #282C34;
 }
 
-.serialization {
 
-}
+

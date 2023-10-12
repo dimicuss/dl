@@ -15,6 +15,7 @@ export const keywords = [
   'Фамилия',
   'Имя',
   'Отчество',
+  'Возраст'
 ]
 
 export const eq = '='

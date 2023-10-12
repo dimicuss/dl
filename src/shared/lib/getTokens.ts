@@ -1,5 +1,5 @@
 import {CharPosition, CharRange, Symbol, TokenObject, Tokens} from "../types/editor";
-import {keywords, numberRegEx, lineBreak, stringRegEx, rBrace, lBrace, delimieters, eq, notEq, moreEq, lessEq, and, or, more, less} from "./tokens";
+import {keywords, numberRegEx, stringRegEx, rBrace, lBrace, delimieters, eq, notEq, moreEq, lessEq, and, or, more, less} from "./tokens";
 
 function isDelimiter(c: Symbol) {
   return delimieters.includes(c)
@@ -60,10 +60,6 @@ export function getTokens(chars: CharPosition[]) {
 
     if (isDelimiter(char) && left === right) {
       const charRange = getCharRange([currentCharP])
-
-      if (char === lineBreak) {
-        result.push(getToken(charRange, Tokens.LineBreak))
-      }
 
       if (char === rBrace) {
         result.push(getToken(charRange, Tokens.RBrace))

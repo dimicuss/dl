@@ -8,22 +8,52 @@ import {baseKeymap} from "prosemirror-commands"
 import {Tokens} from "../../types/editor"
 
 import styles from './index.css'
-import 'prosemirror-view/style/prosemirror.css'
 import {getTokens} from "@shared/lib/getTokens"
 import {getCharPositions} from "@shared/lib/getChars"
 import {getSyntaxTree} from "@shared/lib/getSyntaxTree"
 import {serializeExpression} from "@shared/lib/serializeExpression"
 
+import 'prosemirror-view/style/prosemirror.css'
+
 const initialState = {
   "doc": {
     "type": "doc",
     "content": [
+
       {
         "type": "paragraph",
         "content": [
           {
             "type": "text",
-            "text": "Фамилия = a & Имя = b  Отчество = c & Фамилия = d & Имя = e  Фамилия = f & Имя = g Имя = i",
+            "text": "Возраст = a & Отчество = b & Фамилия = c & Имя = d |",
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Фамилия = d",
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Фамилия = f & Имя = g & Отчество = h",
+
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Возраст = 27 | Имя = i",
           }
         ]
       },
