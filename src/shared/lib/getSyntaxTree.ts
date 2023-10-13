@@ -55,7 +55,12 @@ function getExpression(cToken?: CItem<TokenObject>, previousExpressions: Express
       if (nextToken) {
         if (!equationArgsTokens.includes(nextToken.type)) {
           comment.push(`Second argument is invalid. Type: "${nextToken.type}"`)
-          next = cNext
+
+          if (nextToken.type === Tokens.And || nextToken.type === Tokens.Or) {
+            next = cNext
+          } else {
+            next = cNext.n
+          }
         } else {
           tokens.push(nextToken)
           next = cNext.n
@@ -75,7 +80,7 @@ function getExpression(cToken?: CItem<TokenObject>, previousExpressions: Express
       }])
     }
 
-    return getExpression(cToken.n, previousExpressions)
+    return _getSyntaxTree(cToken.n, previousExpressions)
   }
 
   return undefined
