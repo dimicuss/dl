@@ -19,7 +19,7 @@ p {
     color: #66D9EF;
 }
 
-.expression, .and, .or {
+.expression, .l_brace, .r_brace {
     color: #E6256B;
 }
 
@@ -38,10 +38,6 @@ p {
 
 .doc {
     outline: none;
-}
-
-.l_brace, .r_brace {
-    color: brown;
 }
 
 .editor {

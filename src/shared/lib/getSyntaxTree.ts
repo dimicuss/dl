@@ -1,7 +1,7 @@
 import {CItem} from '@shared/types/circulize'
 import {ExpressionObject, TokenObject, Tokens, Expression} from "../types/editor";
 import {circulize, copyCItem, findCItem} from "./circulize";
-import {eq, lessEq, notEq, more, less, moreEq} from './tokens';
+import {eq, lessEq, notEq, more, less, moreEq, and, or} from './tokens';
 
 const equationTokens = new Map([
   [eq, Expression.Eq],
@@ -55,8 +55,7 @@ function getExpression(cToken?: CItem<TokenObject>, previousExpressions: Express
       if (nextToken) {
         if (!equationArgsTokens.includes(nextToken.type)) {
           comment.push(`Second argument is invalid. Type: "${nextToken.type}"`)
-
-          if (nextToken.type === Tokens.And || nextToken.type === Tokens.Or) {
+          if (nextToken.type === Tokens.Expression) {
             next = cNext
           } else {
             next = cNext.n
@@ -87,7 +86,7 @@ function getExpression(cToken?: CItem<TokenObject>, previousExpressions: Express
 }
 
 function getAnd(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionObject[] | undefined {
-  if (cToken && cToken.i.type === Tokens.And) {
+  if (cToken && cToken.i.charRange.range === and) {
     const cNext = cToken.n
     const children: ExpressionObject[] = []
     const previousExpression = previousExpressions.at(-1)
@@ -138,7 +137,7 @@ function getAnd(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObje
 
 
 export function getOr(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionObject[] | undefined {
-  if (cToken && cToken.i.type === Tokens.Or) {
+  if (cToken && cToken.i.charRange.range === or) {
     const cNext = cToken?.n
     const children: ExpressionObject[] = []
     const previousExpression = previousExpressions.at(-1)

@@ -27,7 +27,7 @@ export const less = '<'
 export const and = '&'
 export const or = '|'
 
-export const expressionTokens = [eq, notEq, moreEq, lessEq, more, less]
+export const expressionTokens = [eq, notEq, moreEq, lessEq, more, less, and, or]
 
 export const numberRegEx = /^-?\d+(\.\d+)?$/
 

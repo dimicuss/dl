@@ -80,14 +80,6 @@ export function getTokens(chars: CharPosition[]) {
         result.push(getToken(charRange, Tokens.Expression))
       }
 
-      else if (subStr === and) {
-        result.push(getToken(charRange, Tokens.And))
-      }
-
-      else if (subStr === or) {
-        result.push(getToken(charRange, Tokens.Or))
-      }
-
       else if (isKeyword(subStr)) {
         result.push(getToken(charRange, Tokens.Keyword))
       }
