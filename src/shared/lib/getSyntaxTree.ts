@@ -1,6 +1,6 @@
 import {CItem} from '@shared/types/circulize'
 import {ExpressionObject, TokenObject, Tokens, Expression} from "../types/editor";
-import {circulize} from "./circulize";
+import {circulize, copyCItem, findCItem} from "./circulize";
 import {eq, lessEq, notEq, more, less, moreEq} from './tokens';
 
 const equationTokens = new Map([
@@ -78,13 +78,12 @@ function getExpression(cToken?: CItem<TokenObject>, previousExpressions: Express
   return undefined
 }
 
-
 function getAnd(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionObject[] | undefined {
   if (cToken && cToken.i.type === Tokens.And) {
     const cNext = cToken.n
     const children: ExpressionObject[] = []
     const previousExpression = previousExpressions.at(-1)
-    const [nextExpression, ...nextRest] = _getSyntaxTree(cNext)
+    const [nextExpression, ...nextRest] = _getSyntaxTree(cNext, [])
 
     const expression = {
       type: Expression.And,
@@ -137,7 +136,7 @@ export function getOr(cToken?: CItem<TokenObject>, previousExpressions: Expressi
     const cNext = cToken?.n
     const children: ExpressionObject[] = []
     const previousExpression = previousExpressions.at(-1)
-    const [nextExpression, ...nextRest] = _getSyntaxTree(cNext)
+    const [nextExpression, ...nextRest] = _getSyntaxTree(cNext, [])
 
     const expression = {
       type: Expression.Or,
@@ -165,53 +164,35 @@ export function getOr(cToken?: CItem<TokenObject>, previousExpressions: Expressi
 }
 
 
-function getLBrace(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionObject[] | undefined {
+function getBraced(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionObject[] | undefined {
   if (cToken && cToken.i.type === Tokens.LBrace) {
-    const expressions = _getSyntaxTree(cToken.n)
+    let rBraceCount = 0
+    let lBraceCount = 1
+    const comment: string[] = []
 
+    const lastRBrace = findCItem(cToken.n, ({i}) => {
+      if (i.type === Tokens.RBrace) rBraceCount++
+      if (i.type === Tokens.LBrace) lBraceCount++
+      return rBraceCount === lBraceCount
+    })
 
-    let rBraceFound = false
-    const children: ExpressionObject[] = []
-    const nextExpressions: ExpressionObject[] = []
+    const copiedTree = lastRBrace ? copyCItem(cToken.n, (cItem) => cItem !== lastRBrace) : cToken.n
+    const children = _getSyntaxTree(copiedTree, [])
 
-    for (let i = 0; i < expressions.length; i++) {
-      const child = expressions[i]
-
-      if (child.type === Expression.RBrace) {
-        rBraceFound = true
-        continue
-      }
-
-      if (rBraceFound) {
-        nextExpressions.push(child)
-      } else {
-        children.push(child)
-      }
+    if (children.length > 1) {
+      comment.push('Braces cannot have more expression than one')
     }
 
     const expression: ExpressionObject = {
       type: Expression.Braced,
-      closed: false,
+      closed: lastRBrace !== undefined,
       children,
+      comment
     }
 
-    return [...previousExpressions, expression, ...nextExpressions]
-  }
-
-  return undefined
-}
-
-
-function getRBrace(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionObject[] | undefined {
-  if (cToken && cToken.i.type === Tokens.RBrace) {
-    const nextExpressions = _getSyntaxTree(cToken.n)
-
-    const expression: ExpressionObject = {
-      type: Expression.RBrace,
-      closed: true,
-    }
-
-    return [...previousExpressions, expression, ...nextExpressions]
+    return lastRBrace
+      ? _getSyntaxTree(lastRBrace?.n, [...previousExpressions, expression])
+      : [...previousExpressions, expression]
   }
 
   return undefined
@@ -221,8 +202,7 @@ function getRBrace(cToken?: CItem<TokenObject>, previousExpressions: ExpressionO
 function _getSyntaxTree(cToken?: CItem<TokenObject>, previousExpression: ExpressionObject[] = []): ExpressionObject[] {
   if (cToken) {
     const result =
-      getLBrace(cToken, previousExpression) ||
-      getRBrace(cToken, previousExpression) ||
+      getBraced(cToken, previousExpression) ||
       getAnd(cToken, previousExpression) ||
       getOr(cToken, previousExpression) ||
       getExpression(cToken, previousExpression)
