@@ -16,6 +16,10 @@ const equationArgsTokens = [
   Tokens.String, Tokens.Number, Tokens.Keyword
 ]
 
+const invalidExpressionTokens = [
+  Tokens.RBrace, Tokens.Invalid
+]
+
 const equationArgMap = new Map([
   [Tokens.Keyword, [Tokens.String, Tokens.Number]],
   [Tokens.String, [Tokens.Keyword]],
@@ -68,7 +72,6 @@ function getExpression(cToken?: CItem<TokenObject>, previousExpressions: Express
         type,
         tokens,
         comment,
-        closed: true
       }])
     }
 
@@ -88,7 +91,6 @@ function getAnd(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObje
     const expression = {
       type: Expression.And,
       children,
-      closed: true,
     }
 
     if (previousExpression) {
@@ -111,7 +113,6 @@ function getAnd(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObje
 
         const newOrExpression: ExpressionObject = {
           type: Expression.Or,
-          closed: true,
           children: [expression, ...restExpressions],
         }
 
@@ -140,7 +141,6 @@ export function getOr(cToken?: CItem<TokenObject>, previousExpressions: Expressi
 
     const expression = {
       type: Expression.Or,
-      closed: true,
       children
     }
 
@@ -183,9 +183,12 @@ function getBraced(cToken?: CItem<TokenObject>, previousExpressions: ExpressionO
       comment.push('Braces cannot have more expression than one')
     }
 
+    if (lastRBrace === undefined) {
+      comment.push('Unclosed brace')
+    }
+
     const expression: ExpressionObject = {
       type: Expression.Braced,
-      closed: lastRBrace !== undefined,
       children,
       comment
     }
@@ -198,10 +201,33 @@ function getBraced(cToken?: CItem<TokenObject>, previousExpressions: ExpressionO
   return undefined
 }
 
+function getInvalid(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionObject[] | undefined {
+  if (cToken && invalidExpressionTokens.includes(cToken.i.type)) {
+    let comment: string[] = []
+
+    if (cToken.i.type === Tokens.LBrace) {
+      comment.push('Unexpected right brace')
+    }
+
+    if (cToken.i.type === Tokens.Invalid) {
+      comment.push('Invalid token detected')
+    }
+
+    const expression: ExpressionObject = {
+      type: Expression.Invalid,
+      comment
+    }
+
+    return _getSyntaxTree(cToken.n, [...previousExpressions, expression])
+  }
+
+  return undefined
+}
 
 function _getSyntaxTree(cToken?: CItem<TokenObject>, previousExpression: ExpressionObject[] = []): ExpressionObject[] {
   if (cToken) {
     const result =
+      getInvalid(cToken, previousExpression) ||
       getBraced(cToken, previousExpression) ||
       getAnd(cToken, previousExpression) ||
       getOr(cToken, previousExpression) ||

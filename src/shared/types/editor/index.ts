@@ -56,14 +56,13 @@ export enum Expression {
   Or = 'or',
   And = 'and',
   Braced = 'braced',
-  RBrace = 'r_brace'
+  Invalid = 'invalid'
 }
 
 export interface ExpressionObject {
   type: Expression
   tokens?: TokenObject[]
   children?: ExpressionObject[]
-  closed: boolean
   comment?: string[]
 }
 
