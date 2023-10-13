@@ -17,7 +17,7 @@ const equationArgsTokens = [
 ]
 
 const invalidExpressionTokens = [
-  Tokens.RBrace, Tokens.Invalid, Tokens.String, Tokens.Number
+  Tokens.RBrace, Tokens.Invalid
 ]
 
 const equationArgMap = new Map([
@@ -56,9 +56,6 @@ function getExpression(cToken?: CItem<TokenObject>, previousExpressions: Express
         if (!equationArgsTokens.includes(nextToken.type)) {
           comment.push(`Second argument is invalid. Type: "${nextToken.type}"`)
           next = cNext
-        } else if (previousToken && !equationArgMap.get(previousToken.type)?.includes(nextToken.type)) {
-          comment.push('Arguments should be [Keyword, String | Number] or vice versa. 1st: "${previousToken.type}", 2nd: "${nextToken.type}"')
-          next = cNext
         } else {
           tokens.push(nextToken)
           next = cNext.n
@@ -66,6 +63,10 @@ function getExpression(cToken?: CItem<TokenObject>, previousExpressions: Express
       } else {
         comment.push('Second argument is not defined')
         next = cNext
+      }
+
+      if (nextToken && previousToken && !equationArgMap.get(previousToken.type)?.includes(nextToken.type)) {
+        comment.push('Arguments should be [Keyword, String | Number] or vice versa. 1st: "${previousToken.type}", 2nd: "${nextToken.type}"')
       }
 
       return _getSyntaxTree(next, [...previousExpressions, {
