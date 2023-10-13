@@ -17,7 +17,7 @@ const equationArgsTokens = [
 ]
 
 const invalidExpressionTokens = [
-  Tokens.RBrace, Tokens.Invalid
+  Tokens.RBrace, Tokens.Invalid, Tokens.String, Tokens.Number
 ]
 
 const equationArgMap = new Map([
@@ -227,10 +227,10 @@ function getInvalid(cToken?: CItem<TokenObject>, previousExpressions: Expression
 function _getSyntaxTree(cToken?: CItem<TokenObject>, previousExpression: ExpressionObject[] = []): ExpressionObject[] {
   if (cToken) {
     const result =
-      getInvalid(cToken, previousExpression) ||
       getBraced(cToken, previousExpression) ||
       getAnd(cToken, previousExpression) ||
       getOr(cToken, previousExpression) ||
+      getInvalid(cToken, previousExpression) ||
       getExpression(cToken, previousExpression)
 
     return result || previousExpression
