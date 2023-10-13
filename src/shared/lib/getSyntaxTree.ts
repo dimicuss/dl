@@ -62,7 +62,6 @@ function getExpression(cToken?: CItem<TokenObject>, previousExpressions: Express
         }
       } else {
         comment.push('Second argument is not defined')
-        next = cNext
       }
 
       if (nextToken && previousToken && !equationArgMap.get(previousToken.type)?.includes(nextToken.type)) {
