@@ -14,8 +14,7 @@ p {
     color: white;
 }
 
-
-.keyword {
+.atom {
     color: #66D9EF;
 }
 
@@ -23,17 +22,9 @@ p {
     color: #E6256B;
 }
 
-.string {
-    color: #C0B863;
-}
-
 .invalid {
     color: red;
     text-decoration: underline;
-}
-
-.number {
-    color: #AE81FF;
 }
 
 .doc {

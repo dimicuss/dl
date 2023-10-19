@@ -14,36 +14,17 @@ export interface CharRange {
 }
 
 export enum Tokens {
-  String = 'string',
-  Number = 'number',
-  Keyword = 'keyword',
-  Invalid = 'invalid',
   LBrace = 'l_brace',
   RBrace = 'r_brace',
   LineBreak = 'line_break',
   WhiteSpace = 'white_space',
   Expression = 'expression',
-  And = 'and',
-  Or = 'or'
-}
-
-export enum Segments {
-  Expression = 'expression',
-  LogOperator = 'log_operator',
-  RBrace = 'r_brace',
-  LBrace = 'l_brace'
+  Atom = 'atom'
 }
 
 export interface TokenObject {
   type: Tokens
   charRange: CharRange
-}
-
-export interface SegmentObject {
-  type: Segments
-  tokens: TokenObject[]
-  left: TokenObject[]
-  error?: Error
 }
 
 export enum Expression {
@@ -56,11 +37,19 @@ export enum Expression {
   Or = 'or',
   And = 'and',
   Braced = 'braced',
-  Invalid = 'invalid'
+  Atom = 'atom'
+}
+
+export enum Atom {
+  String = 'string',
+  Number = 'number',
+  Keyword = 'keyword',
+  Invalid = 'invalid',
 }
 
 export interface ExpressionObject {
   type: Expression
+  atomType?: Atom
   tokens?: TokenObject[]
   children?: ExpressionObject[]
   comment?: string[]

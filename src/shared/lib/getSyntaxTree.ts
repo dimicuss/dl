@@ -1,7 +1,7 @@
 import {CItem} from '@shared/types/circulize'
-import {ExpressionObject, TokenObject, Tokens, Expression} from "../types/editor";
+import {ExpressionObject, TokenObject, Tokens, Expression, Atom} from "../types/editor";
 import {circulize, copyCItem, findCItem} from "./circulize";
-import {eq, lessEq, notEq, more, less, moreEq, and, or} from './tokens';
+import {eq, lessEq, notEq, more, less, moreEq, and, or, stringRegEx, keywords, numberRegEx} from './tokens';
 
 const equationTokens = new Map([
   [eq, Expression.Eq],
@@ -13,73 +13,64 @@ const equationTokens = new Map([
 ])
 
 const equationArgsTokens = [
-  Tokens.String, Tokens.Number, Tokens.Keyword
+  Atom.String, Atom.Number, Atom.Keyword
 ]
 
-const invalidExpressionTokens = [
-  Tokens.RBrace, Tokens.Invalid
+const atomTokens = [
+  Tokens.RBrace, Tokens.Atom
 ]
+
 
 const equationArgMap = new Map([
-  [Tokens.Keyword, [Tokens.String, Tokens.Number]],
-  [Tokens.String, [Tokens.Keyword]],
-  [Tokens.Number, [Tokens.Keyword]]
+  [Atom.Keyword, [Atom.String, Atom.Number]],
+  [Atom.String, [Atom.Keyword]],
+  [Atom.Number, [Atom.Keyword]]
 ])
 
 function getExpression(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionObject[] | undefined {
   if (cToken) {
-    const cNext = cToken.n
-    const cPrevious = cToken.p
-
-    const token = cToken.i
-    const nextToken = cNext?.i
-    const previousToken = cPrevious?.i
-
-    const type = equationTokens.get(token.charRange.range)
+    const type = equationTokens.get(cToken.i.charRange.range)
 
     if (type) {
+      const nextAtom = getAtom(cToken.n)
+      const previousAtom = previousExpressions.at(-1)
+
       let next: CItem<TokenObject> | undefined
-      const tokens: TokenObject[] = []
+      const children: ExpressionObject[] = []
       const comment: string[] = []
 
-      if (previousToken) {
-        if (!equationArgsTokens.includes(previousToken.type)) {
-          comment.push(`First argument is invalid. Type: "${previousToken.type}"`)
+      if (previousAtom?.atomType) {
+        if (!equationArgsTokens.includes(previousAtom.atomType)) {
+          comment.push(`First argument is invalid. Type: "${previousAtom.atomType}"`)
         } else {
-          tokens.push(previousToken)
+          children.push(previousAtom)
         }
       } else {
         comment.push('First argument is not defined')
       }
 
-      if (nextToken) {
-        if (!equationArgsTokens.includes(nextToken.type)) {
-          comment.push(`Second argument is invalid. Type: "${nextToken.type}"`)
-          if (nextToken.type === Tokens.Expression) {
-            next = cNext
-          } else {
-            next = cNext.n
-          }
+      if (nextAtom?.atomType) {
+        if (!equationArgsTokens.includes(nextAtom.atomType)) {
+          comment.push(`Second argument is invalid. Type: "${nextAtom.atomType}"`)
         } else {
-          tokens.push(nextToken)
-          next = cNext.n
+          children.push(nextAtom)
         }
+        next = cToken?.n?.n
       } else {
+        next = cToken.n
         comment.push('Second argument is not defined')
       }
 
-      if (nextToken && previousToken && !equationArgMap.get(previousToken.type)?.includes(nextToken.type)) {
+      if (nextAtom?.atomType && previousAtom?.atomType && !equationArgMap.get(previousAtom.atomType)?.includes(nextAtom.atomType)) {
         comment.push('Arguments should be [Keyword, String | Number] or vice versa. 1st: "${previousToken.type}", 2nd: "${nextToken.type}"')
       }
 
-      return _getSyntaxTree(next, [...previousExpressions, {
+      return _getSyntaxTree(next, [...previousExpressions.slice(0, -1), {
         type,
-        tokens,
         comment,
+        children
       }])
     }
-
-    return _getSyntaxTree(cToken.n, previousExpressions)
   }
 
   return undefined
@@ -90,7 +81,7 @@ function getAnd(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObje
     const cNext = cToken.n
     const children: ExpressionObject[] = []
     const previousExpression = previousExpressions.at(-1)
-    const [nextExpression, ...nextRest] = _getSyntaxTree(cNext, [])
+    const [nextExpression, ...nextRest] = _getSyntaxTree(cNext)
 
     const expression = {
       type: Expression.And,
@@ -141,7 +132,7 @@ export function getOr(cToken?: CItem<TokenObject>, previousExpressions: Expressi
     const cNext = cToken?.n
     const children: ExpressionObject[] = []
     const previousExpression = previousExpressions.at(-1)
-    const [nextExpression, ...nextRest] = _getSyntaxTree(cNext, [])
+    const [nextExpression, ...nextRest] = _getSyntaxTree(cNext)
 
     const expression = {
       type: Expression.Or,
@@ -181,7 +172,7 @@ function getBraced(cToken?: CItem<TokenObject>, previousExpressions: ExpressionO
     })
 
     const copiedTree = lastRBrace ? copyCItem(cToken.n, (cItem) => cItem !== lastRBrace) : cToken.n
-    const children = _getSyntaxTree(copiedTree, [])
+    const children = _getSyntaxTree(copiedTree)
 
     if (children.length > 1) {
       comment.push('Braces cannot have more expression than one')
@@ -205,24 +196,20 @@ function getBraced(cToken?: CItem<TokenObject>, previousExpressions: ExpressionO
   return undefined
 }
 
-function getInvalid(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionObject[] | undefined {
-  if (cToken && invalidExpressionTokens.includes(cToken.i.type)) {
-    let comment: string[] = []
+function getAtom(cToken?: CItem<TokenObject>): ExpressionObject | undefined {
+  if (cToken && atomTokens.includes(cToken.i.type)) {
+    const {range} = cToken.i.charRange
+    const atomType =
+      stringRegEx.test(range) && Atom.String ||
+      keywords.includes(range) && Atom.Keyword ||
+      numberRegEx.test(range) && Atom.Number ||
+      Atom.Invalid
 
-    if (cToken.i.type === Tokens.LBrace) {
-      comment.push('Unexpected right brace')
+    return {
+      type: Expression.Atom,
+      atomType,
+      tokens: [cToken.i]
     }
-
-    if (cToken.i.type === Tokens.Invalid) {
-      comment.push('Invalid token detected')
-    }
-
-    const expression: ExpressionObject = {
-      type: Expression.Invalid,
-      comment
-    }
-
-    return _getSyntaxTree(cToken.n, [...previousExpressions, expression])
   }
 
   return undefined
@@ -230,14 +217,17 @@ function getInvalid(cToken?: CItem<TokenObject>, previousExpressions: Expression
 
 function _getSyntaxTree(cToken?: CItem<TokenObject>, previousExpression: ExpressionObject[] = []): ExpressionObject[] {
   if (cToken) {
-    const result =
-      getBraced(cToken, previousExpression) ||
-      getAnd(cToken, previousExpression) ||
-      getOr(cToken, previousExpression) ||
-      getInvalid(cToken, previousExpression) ||
-      getExpression(cToken, previousExpression)
+    const atom = getAtom(cToken)
+    const nextToken = atom ? cToken.n : cToken
+    const previousExpressionWithAtom = atom ? [...previousExpression, atom] : previousExpression
 
-    return result || previousExpression
+    const result =
+      getBraced(nextToken, previousExpressionWithAtom) ||
+      getAnd(nextToken, previousExpressionWithAtom) ||
+      getOr(nextToken, previousExpressionWithAtom) ||
+      getExpression(nextToken, previousExpressionWithAtom)
+
+    return result || _getSyntaxTree(nextToken, previousExpressionWithAtom)
   }
 
   return previousExpression

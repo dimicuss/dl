@@ -1,20 +1,8 @@
 import {CharPosition, CharRange, Symbol, TokenObject, Tokens} from "../types/editor";
-import {keywords, numberRegEx, stringRegEx, rBrace, lBrace, delimieters, eq, notEq, moreEq, lessEq, and, or, more, less, expressionTokens} from "./tokens";
+import {keywords, numberRegEx, stringRegEx, rBrace, lBrace, delimieters, expressionTokens} from "./tokens";
 
 function isDelimiter(c: Symbol) {
   return delimieters.includes(c)
-}
-
-function isString(str: string) {
-  return stringRegEx.test(str)
-}
-
-function isKeyword(c: string) {
-  return keywords.includes(c)
-}
-
-function isNumber(str: string) {
-  return numberRegEx.test(str)
 }
 
 function getSubChars(chars: CharPosition[], left: number, right: number) {
@@ -80,20 +68,8 @@ export function getTokens(chars: CharPosition[]) {
         result.push(getToken(charRange, Tokens.Expression))
       }
 
-      else if (isKeyword(subStr)) {
-        result.push(getToken(charRange, Tokens.Keyword))
-      }
-
-      else if (isNumber(subStr)) {
-        result.push(getToken(charRange, Tokens.Number))
-      }
-
-      else if (isString(subStr)) {
-        result.push(getToken(charRange, Tokens.String))
-      }
-
       else {
-        result.push(getToken(charRange, Tokens.Invalid))
+        result.push(getToken(charRange, Tokens.Atom))
       }
 
       left = right
