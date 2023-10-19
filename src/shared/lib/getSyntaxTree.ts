@@ -41,9 +41,8 @@ function getExpression(cToken?: CItem<TokenObject>, previousExpressions: Express
       if (previousAtom?.atomType) {
         if (!equationArgsTokens.includes(previousAtom.atomType)) {
           comment.push(`First argument is invalid. Type: "${previousAtom.atomType}"`)
-        } else {
-          children.push(previousAtom)
         }
+        children.push(previousAtom)
       } else {
         comment.push('First argument is not defined')
       }
@@ -51,9 +50,8 @@ function getExpression(cToken?: CItem<TokenObject>, previousExpressions: Express
       if (nextAtom?.atomType) {
         if (!equationArgsTokens.includes(nextAtom.atomType)) {
           comment.push(`Second argument is invalid. Type: "${nextAtom.atomType}"`)
-        } else {
-          children.push(nextAtom)
         }
+        children.push(nextAtom)
         next = cToken?.n?.n
       } else {
         next = cToken.n
