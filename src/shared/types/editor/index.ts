@@ -50,7 +50,7 @@ export enum Atom {
 export interface ExpressionObject {
   type: Expression
   atomType?: Atom
-  tokens?: TokenObject[]
+  tokens: TokenObject[]
   children?: ExpressionObject[]
   comment?: string[]
 }

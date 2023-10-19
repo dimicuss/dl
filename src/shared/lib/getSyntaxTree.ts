@@ -20,7 +20,6 @@ const atomTokens = [
   Tokens.RBrace, Tokens.Atom
 ]
 
-
 const equationArgMap = new Map([
   [Atom.Keyword, [Atom.String, Atom.Number]],
   [Atom.String, [Atom.Keyword]],
@@ -68,7 +67,8 @@ function getExpression(cToken?: CItem<TokenObject>, previousExpressions: Express
       return _getSyntaxTree(next, [...previousExpressions.slice(0, -1), {
         type,
         comment,
-        children
+        children,
+        tokens: [cToken.i]
       }])
     }
   }
@@ -78,15 +78,12 @@ function getExpression(cToken?: CItem<TokenObject>, previousExpressions: Express
 
 function getAnd(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionObject[] | undefined {
   if (cToken && cToken.i.charRange.range === and) {
-    const cNext = cToken.n
+    const tokens: TokenObject[] = []
     const children: ExpressionObject[] = []
     const previousExpression = previousExpressions.at(-1)
-    const [nextExpression, ...nextRest] = _getSyntaxTree(cNext)
+    const [nextExpression, ...nextRest] = _getSyntaxTree(cToken.n)
 
-    const expression = {
-      type: Expression.And,
-      children,
-    }
+    tokens.push(cToken.i)
 
     if (previousExpression) {
       children.push(previousExpression)
@@ -94,33 +91,60 @@ function getAnd(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObje
 
     if (nextExpression) {
       if (nextExpression.type === Expression.Or) {
+        const orChildren: ExpressionObject[] = []
+        const andTokens: TokenObject[] = []
+        const andChildren: ExpressionObject[] = [...children]
         const nextChildren = nextExpression.children || []
-        const [firstOrExpression, ...restExpressions] = nextChildren
+        const [firstOrExpression, ...restOrExpressions] = nextChildren
 
         if (firstOrExpression) {
           if (firstOrExpression.type === Expression.And) {
             const firstOrExpressionChildren = firstOrExpression.children || []
-            children.push(...firstOrExpressionChildren)
+            andChildren.push(...firstOrExpressionChildren)
+            andTokens.push(...firstOrExpression.tokens)
           } else {
-            children.push(firstOrExpression)
+            andChildren.push(firstOrExpression)
           }
         }
 
-        const newOrExpression: ExpressionObject = {
-          type: Expression.Or,
-          children: [expression, ...restExpressions],
-        }
+        andTokens.push(cToken.i)
 
-        return [...previousExpressions.slice(0, -1), newOrExpression, ...nextRest]
+        orChildren.push(
+          {
+            type: Expression.And,
+            children: andChildren,
+            tokens: andTokens
+          },
+          ...restOrExpressions
+        )
+
+        return [
+          ...previousExpressions.slice(0, -1),
+          {
+            type: Expression.Or,
+            children: orChildren,
+            tokens: nextExpression.tokens,
+          },
+          ...nextRest
+        ]
       } else if (nextExpression.type === Expression.And) {
         const nextChildren = nextExpression.children || []
         children.push(...nextChildren)
+        tokens.push(...nextExpression.tokens)
       } else {
         children.push(nextExpression)
       }
     }
 
-    return [...previousExpressions.slice(0, -1), expression, ...nextRest]
+    return [
+      ...previousExpressions.slice(0, -1),
+      {
+        type: Expression.And,
+        children,
+        tokens,
+      },
+      ...nextRest
+    ]
   }
 
   return undefined
@@ -130,14 +154,12 @@ function getAnd(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObje
 export function getOr(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionObject[] | undefined {
   if (cToken && cToken.i.charRange.range === or) {
     const cNext = cToken?.n
+    const tokens: TokenObject[] = []
     const children: ExpressionObject[] = []
     const previousExpression = previousExpressions.at(-1)
     const [nextExpression, ...nextRest] = _getSyntaxTree(cNext)
 
-    const expression = {
-      type: Expression.Or,
-      children
-    }
+    tokens.push(cToken.i)
 
     if (previousExpression) {
       children.push(previousExpression)
@@ -147,12 +169,20 @@ export function getOr(cToken?: CItem<TokenObject>, previousExpressions: Expressi
       if (nextExpression.type === Expression.Or) {
         const nextChildren = nextExpression.children || []
         children.push(...nextChildren)
+        tokens.push(...nextExpression.tokens)
       } else {
         children.push(nextExpression)
       }
     }
 
-    return [...previousExpressions.slice(0, -1), expression, ...nextRest]
+    return [
+      ...previousExpressions.slice(0, -1), {
+        type: Expression.Or,
+        children,
+        tokens
+      },
+      ...nextRest
+    ]
   }
 
   return undefined
@@ -161,10 +191,11 @@ export function getOr(cToken?: CItem<TokenObject>, previousExpressions: Expressi
 
 function getBraced(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionObject[] | undefined {
   if (cToken && cToken.i.type === Tokens.LBrace) {
+    const comment: string[] = []
+    const tokens: TokenObject[] = []
+
     let rBraceCount = 0
     let lBraceCount = 1
-    const comment: string[] = []
-
     const lastRBrace = findCItem(cToken.n, ({i}) => {
       if (i.type === Tokens.RBrace) rBraceCount++
       if (i.type === Tokens.LBrace) lBraceCount++
@@ -174,18 +205,23 @@ function getBraced(cToken?: CItem<TokenObject>, previousExpressions: ExpressionO
     const copiedTree = lastRBrace ? copyCItem(cToken.n, (cItem) => cItem !== lastRBrace) : cToken.n
     const children = _getSyntaxTree(copiedTree)
 
+    tokens.push(cToken.i)
+
     if (children.length > 1) {
       comment.push('Braces cannot have more expression than one')
     }
 
-    if (lastRBrace === undefined) {
+    if (lastRBrace) {
+      tokens.push(lastRBrace.i)
+    } else {
       comment.push('Unclosed brace')
     }
 
     const expression: ExpressionObject = {
       type: Expression.Braced,
       children,
-      comment
+      comment,
+      tokens
     }
 
     return lastRBrace
@@ -200,8 +236,8 @@ function getAtom(cToken?: CItem<TokenObject>): ExpressionObject | undefined {
   if (cToken && atomTokens.includes(cToken.i.type)) {
     const {range} = cToken.i.charRange
     const atomType =
-      stringRegEx.test(range) && Atom.String ||
       keywords.includes(range) && Atom.Keyword ||
+      stringRegEx.test(range) && Atom.String ||
       numberRegEx.test(range) && Atom.Number ||
       Atom.Invalid
 

@@ -14,11 +14,20 @@ p {
     color: white;
 }
 
-.atom {
+.keyword {
     color: #66D9EF;
 }
 
-.expression, .l_brace, .r_brace {
+
+.string {
+    color: #C0B863;
+} 
+
+.number {
+    color: #AE81FF;
+}
+
+.eq, .not_eq, .more_eq, .less_eq, .more, .less, .braced, .and, .or {
     color: #E6256B;
 }
 

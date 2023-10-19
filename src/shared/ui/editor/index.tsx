@@ -5,15 +5,17 @@ import {keymap} from "prosemirror-keymap"
 import {undo, redo, history} from "prosemirror-history"
 import {MarkSpec, Schema} from "prosemirror-model"
 import {baseKeymap} from "prosemirror-commands"
-import {Tokens} from "../../types/editor"
+import {Atom, Expression} from "../../types/editor"
 
 import styles from './index.css'
 import {getTokens} from "@shared/lib/getTokens"
 import {getCharPositions} from "@shared/lib/getChars"
+import {colorize} from "@shared/lib/colorize"
 import {getSyntaxTree} from "@shared/lib/getSyntaxTree"
 import {serializeExpression} from "@shared/lib/serializeExpression"
-
 import 'prosemirror-view/style/prosemirror.css'
+
+
 
 const initialState = {
   "doc": {
@@ -75,14 +77,8 @@ export const Editor = () => {
     function handleCurrentTransaction(t: Transaction) {
       const tokens = getTokens(getCharPositions(t.doc))
       const tree = getSyntaxTree(tokens)
-
       const serializedTree = serializeExpression(tree)
-
-      const colorizedState = tokens.reduce((t, token) => {
-        const {type, charRange} = token
-        const {start, end} = charRange
-        return t.addMark(start, end + 1, schema.marks[type].create())
-      }, t.removeMark(0, t.doc.content.size))
+      const colorizedState = colorize(t.removeMark(0, t.doc.content.size), schema, tree)
 
       return {
         colorizedState,
@@ -90,10 +86,10 @@ export const Editor = () => {
       }
     }
 
-    const marks = Object.values(Tokens).reduce((acc, token) => ({
+    const marks = [...Object.values(Atom), ...Object.values(Expression)].reduce((acc, type) => ({
       ...acc,
-      [token]: {
-        toDOM: () => ['span', {class: styles[token]}],
+      [type]: {
+        toDOM: () => ['span', {class: styles[type]}],
       }
     }), {} as MarkSpec)
 
