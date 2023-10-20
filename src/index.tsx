@@ -1,10 +1,13 @@
 import {createRoot} from 'react-dom/client'
-import {Editor} from './shared/ui/editor'
+import {App} from './shared/ui/app'
 
+const appRoot = document.createElement('div')
+appRoot.setAttribute('id', 'app-root')
+document.body.appendChild(appRoot)
 
-const enterPoint = document.body
-const root = createRoot(enterPoint)
-root.render(<Editor />)
+const root = createRoot(appRoot)
+
+root.render(<App />)
 
 
 

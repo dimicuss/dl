@@ -5,16 +5,15 @@ import {keymap} from "prosemirror-keymap"
 import {undo, redo, history} from "prosemirror-history"
 import {MarkSpec, Schema} from "prosemirror-model"
 import {baseKeymap} from "prosemirror-commands"
-import {Atom, Expression} from "../../types/editor"
+import {Atom, Expression, ExpressionObject} from "../../types/editor"
 
-import styles from './index.css'
 import {getTokens} from "@shared/lib/getTokens"
 import {getCharPositions} from "@shared/lib/getChars"
 import {colorize} from "@shared/lib/colorize"
 import {getSyntaxTree} from "@shared/lib/getSyntaxTree"
-import {serializeExpression} from "@shared/lib/serializeExpression"
-import 'prosemirror-view/style/prosemirror.css'
-
+import ProseMirrorStyles from 'prosemirror-view/style/prosemirror.css'
+import {Tree} from "../tree"
+import {styled} from "styled-components"
 
 
 const initialState = {
@@ -70,26 +69,26 @@ const initialState = {
 
 
 export const Editor = () => {
-  const [serializedTree, setSerializedTree] = useState('')
+  const [tree, setTree] = useState<ExpressionObject[]>([])
   const ref = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     function handleCurrentTransaction(t: Transaction) {
       const tokens = getTokens(getCharPositions(t.doc))
       const tree = getSyntaxTree(tokens)
-      const serializedTree = serializeExpression(tree)
+
       const colorizedState = colorize(t.removeMark(0, t.doc.content.size), schema, tree)
 
       return {
         colorizedState,
-        serializedTree
+        tree
       }
     }
 
     const marks = [...Object.values(Atom), ...Object.values(Expression)].reduce((acc, type) => ({
       ...acc,
       [type]: {
-        toDOM: () => ['span', {class: styles[type]}],
+        toDOM: () => ['span', {class: String(type)}],
       }
     }), {} as MarkSpec)
 
@@ -103,7 +102,7 @@ export const Editor = () => {
         paragraph: {
           content: 'text*',
           marks: '_',
-          toDOM: () => ['p', {class: styles.paragraph}, 0],
+          toDOM: () => ['p', {class: 'p'}, 0],
         },
         text: {}
       },
@@ -119,7 +118,7 @@ export const Editor = () => {
     ]
     const view = new EditorView(ref.current, {
       attributes: {
-        class: styles.doc
+        class: 'doc'
       },
       state: EditorState.fromJSON({
         schema,
@@ -127,19 +126,18 @@ export const Editor = () => {
       }, initialState),
       dispatchTransaction(t) {
         if (t.docChanged) {
-          const {colorizedState, serializedTree} = handleCurrentTransaction(t)
+          const {colorizedState, tree} = handleCurrentTransaction(t)
+          setTree(tree)
           view.updateState(view.state.apply(colorizedState))
-          setSerializedTree(serializedTree)
         } else {
           view.updateState(view.state.apply(t))
         }
       }
     })
 
-    const {colorizedState, serializedTree} = handleCurrentTransaction(view.state.tr)
-
+    const {colorizedState, tree} = handleCurrentTransaction(view.state.tr)
     view.dispatch(colorizedState)
-    setSerializedTree(serializedTree)
+    setTree(tree)
 
     return () => {
       view.destroy()
@@ -149,11 +147,47 @@ export const Editor = () => {
 
 
   return (
-    <div className={styles.container}>
-      <div className={styles.editor}>
+    <>
+      <Container>
         <div ref={ref} />
-      </div>
-      <pre className={styles.serialization}>{serializedTree}</pre>
-    </div>
+      </Container>
+      <Tree tree={tree} />
+    </>
   )
 }
+
+const Container = styled.div`
+  ${ProseMirrorStyles}
+  
+  background-color: #282C34;
+  
+  .p {
+    color: white;
+  }
+
+  .keyword {
+    color: #66D9EF;
+  }
+
+
+  .string {
+    color: #C0B863;
+  } 
+
+  .number {
+    color: #AE81FF;
+  }
+
+  .eq, .not_eq, .more_eq, .less_eq, .more, .less, .braced, .and, .or {
+    color: #E6256B;
+  }
+
+  .invalid {
+    color: red;
+    text-decoration: underline;
+  }
+
+  .doc {
+    outline: none;
+  }
+`

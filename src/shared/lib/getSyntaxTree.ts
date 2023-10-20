@@ -33,6 +33,7 @@ function getExpression(cToken?: CItem<TokenObject>, previousExpressions: Express
     if (type) {
       const nextAtom = getAtom(cToken.n)
       const previousAtom = previousExpressions.at(-1)
+      let handledPreviousExpressions = previousExpressions
 
       let next: CItem<TokenObject> | undefined
       const children: ExpressionObject[] = []
@@ -42,6 +43,7 @@ function getExpression(cToken?: CItem<TokenObject>, previousExpressions: Express
         if (!equationArgsTokens.includes(previousAtom.atomType)) {
           comment.push(`First argument is invalid. Type: "${previousAtom.atomType}"`)
         }
+        handledPreviousExpressions = previousExpressions.slice(0, -1)
         children.push(previousAtom)
       } else {
         comment.push('First argument is not defined')
@@ -62,7 +64,7 @@ function getExpression(cToken?: CItem<TokenObject>, previousExpressions: Express
         comment.push('Arguments should be [Keyword, String | Number] or vice versa. 1st: "${previousToken.type}", 2nd: "${nextToken.type}"')
       }
 
-      return _getSyntaxTree(next, [...previousExpressions.slice(0, -1), {
+      return _getSyntaxTree(next, [...handledPreviousExpressions, {
         type,
         comment,
         children,
@@ -205,6 +207,10 @@ function getBraced(cToken?: CItem<TokenObject>, previousExpressions: ExpressionO
 
     tokens.push(cToken.i)
 
+    if (children.length < 1) {
+      comment.push('Empty braces')
+    }
+
     if (children.length > 1) {
       comment.push('Braces cannot have more expression than one')
     }
@@ -273,4 +279,3 @@ export function getSyntaxTree(tokens: TokenObject[]) {
   const result = _getSyntaxTree(cToken)
   return result
 }
-

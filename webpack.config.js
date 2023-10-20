@@ -1,7 +1,8 @@
 const path = require('path');
 const {ProvidePlugin} = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const createStyledComponentsTransformer = require('typescript-plugin-styled-components').default;
+const styledComponentsTransformer = createStyledComponentsTransformer();
 
 module.exports = (env, argv) => {
   const dev = argv.mode !== "production";
@@ -11,29 +12,17 @@ module.exports = (env, argv) => {
       rules: [
         {
           test: /\.tsx?$/,
-          use: 'ts-loader',
+          loader: 'ts-loader',
           exclude: /node_modules/,
+          options: {            
+            getCustomTransformers: () => ({ before: [styledComponentsTransformer] })
+          }
         },
         {
           test: /\.css$/,
           use: [
-            dev ? 'style-loader' : MiniCssExtractPlugin.loader,
-            {
-              loader: 'css-loader',
-              options: {
-                modules: true,
-              }
-            },
-            'postcss-loader'
-          ],
-          exclude: /node_modules/
-        },
-        {
-          test: /\.css$/,
-          use: [
-            dev ? 'style-loader' : MiniCssExtractPlugin.loader,
-            'css-loader',
-            'postcss-loader',
+            'to-string-loader',
+            'css-loader'
           ],
           include: /node_modules/
         },
@@ -46,7 +35,6 @@ module.exports = (env, argv) => {
       new ProvidePlugin({
         React: 'react'
       }),
-      new MiniCssExtractPlugin()
     ],
     resolve: {
       extensions: ['.tsx', '.ts', '.js'],
