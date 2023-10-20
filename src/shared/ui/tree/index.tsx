@@ -39,10 +39,3 @@ const Children = styled.div`
   padding-left: 20px;
   border-left: 1px solid gray;
 `
-
-const Tokens = styled.div`
-  display: flex;
-  column-gap: 5px;
-`
-
-
