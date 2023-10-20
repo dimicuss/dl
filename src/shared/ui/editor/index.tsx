@@ -14,6 +14,7 @@ import {getSyntaxTree} from "@shared/lib/getSyntaxTree"
 import ProseMirrorStyles from 'prosemirror-view/style/prosemirror.css'
 import {Tree} from "../tree"
 import {styled} from "styled-components"
+import {colorStyles} from "@shared/constants"
 
 
 const initialState = {
@@ -156,34 +157,13 @@ export const Editor = () => {
   )
 }
 
+
+
 const Container = styled.div`
   ${ProseMirrorStyles}
+  ${colorStyles}
   
-  background-color: #282C34;
-  
-  .p {
-    color: white;
-  }
-
-  .keyword {
-    color: #66D9EF;
-  }
-
-
-  .string {
-    color: #C0B863;
-  } 
-
-  .number {
-    color: #AE81FF;
-  }
-
-  .eq, .not_eq, .more_eq, .less_eq, .more, .less, .braced, .and, .or {
-    color: #E6256B;
-  }
-
   .invalid {
-    color: red;
     text-decoration: underline;
   }
 
