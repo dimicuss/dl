@@ -1,5 +1,5 @@
 import {CItem} from '@shared/types/circulize'
-import {ExpressionObject, TokenObject, Tokens, Expression, Atom} from "../types/editor";
+import {ExpressionObject, TokenObject, Tokens, Expression, Atom, AutoCompleteItem} from "../types/editor";
 import {circulize, copyCItem, findCItem} from "./circulize";
 import {eq, lessEq, notEq, more, less, moreEq, and, or, stringRegEx, keywords, numberRegEx} from './tokens';
 
@@ -26,6 +26,12 @@ const equationArgMap = new Map([
   [Atom.Number, [Atom.Keyword]]
 ])
 
+const expressionAutoComplete = new Map([
+  [Atom.Number, keywords],
+  [Atom.String, keywords],
+  [Atom.Keyword, ['abc', 123]]
+])
+
 function getExpression(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionObject[] | undefined {
   if (cToken) {
     const type = equationTokens.get(cToken.i.charRange.range)
@@ -36,10 +42,18 @@ function getExpression(cToken?: CItem<TokenObject>, previousExpressions: Express
       let handledPreviousExpressions = previousExpressions
 
       let next: CItem<TokenObject> | undefined
+      let leftAutoComplete: AutoCompleteItem[] = []
+      let rightAutoComplete: AutoCompleteItem[] = []
       const children: ExpressionObject[] = []
       const comment: string[] = []
+      const tokens = [cToken.i]
+
 
       if (previousAtom?.atomType) {
+        if (!nextAtom?.atomType) {
+          rightAutoComplete = expressionAutoComplete.get(previousAtom.atomType) || []
+        }
+
         if (!equationArgsTokens.includes(previousAtom.atomType)) {
           comment.push(`First argument is invalid. Type: "${previousAtom.atomType}"`)
         }
@@ -50,6 +64,9 @@ function getExpression(cToken?: CItem<TokenObject>, previousExpressions: Express
       }
 
       if (nextAtom?.atomType) {
+        if (!previousAtom?.atomType) {
+          leftAutoComplete = expressionAutoComplete.get(nextAtom.atomType) || []
+        }
         if (!equationArgsTokens.includes(nextAtom.atomType)) {
           comment.push(`Second argument is invalid. Type: "${nextAtom.atomType}"`)
         }
@@ -68,8 +85,10 @@ function getExpression(cToken?: CItem<TokenObject>, previousExpressions: Express
         type,
         comment,
         children,
-        tokens: [cToken.i],
-        closed: children.length > 1
+        tokens,
+        closed: children.length > 1,
+        rightAutoComplete,
+        leftAutoComplete
       }])
     }
   }

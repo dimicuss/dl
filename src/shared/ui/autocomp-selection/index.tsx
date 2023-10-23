@@ -12,7 +12,7 @@ export const AutoCompSelection = ({object}: Props) => {
 
   return (
     <Container style={style}>
-      Completions
+      {completions.map((c, i) => <div key={i}>{c}</div>)}
     </Container>
   )
 }

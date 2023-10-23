@@ -54,7 +54,11 @@ export interface ExpressionObject {
   children: ExpressionObject[]
   comment?: string[]
   closed: boolean
+  leftAutoComplete?: AutoCompleteItem[]
+  rightAutoComplete?: AutoCompleteItem[]
 }
 
 
 export type TreeTokenMap = Map<number, ExpressionObject[]>
+
+export type AutoCompleteItem = string | number

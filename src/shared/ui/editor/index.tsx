@@ -80,14 +80,14 @@ export const Editor = () => {
   useEffect(() => {
     const windowSelection = window.getSelection()
     if (windowSelection && selection && windowSelection.type === 'Caret') {
-      const selectionRect = windowSelection.getRangeAt(0).getBoundingClientRect()
-      const autoComplete = tokenTree.map((map) => getAutoComplete(map, selection)).find(Boolean)
+      const completions = tokenTree.map((map) => getAutoComplete(map, selection)).find(Boolean)
+      const {x, y} = windowSelection.getRangeAt(0).getBoundingClientRect()
 
-      if (autoComplete) {
+      if (x > 0 && y > 0 && completions && completions.length > 0) {
         setAutoComp({
-          x: selectionRect.x,
-          y: selectionRect.y,
-          completions: []
+          x,
+          y,
+          completions,
         })
       } else {
         setAutoComp(undefined)
