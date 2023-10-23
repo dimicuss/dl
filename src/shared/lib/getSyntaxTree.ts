@@ -109,7 +109,7 @@ function getAnd(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObje
             type: Expression.And,
             children: andChildren,
             tokens: andTokens,
-            closed: children.length > 1
+            closed: andChildren.length > 1
           },
           ...restOrExpressions
         )
@@ -120,7 +120,7 @@ function getAnd(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObje
             type: Expression.Or,
             children: orChildren,
             tokens: nextExpression.tokens,
-            closed: children.length > 1
+            closed: orChildren.length > 1
           },
           ...nextRest
         ]
