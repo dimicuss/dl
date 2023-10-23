@@ -68,7 +68,8 @@ function getExpression(cToken?: CItem<TokenObject>, previousExpressions: Express
         type,
         comment,
         children,
-        tokens: [cToken.i]
+        tokens: [cToken.i],
+        closed: children.length > 1
       }])
     }
   }
@@ -98,13 +99,7 @@ function getAnd(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObje
         const [firstOrExpression, ...restOrExpressions] = nextChildren
 
         if (firstOrExpression) {
-          if (firstOrExpression.type === Expression.And) {
-            const firstOrExpressionChildren = firstOrExpression.children || []
-            andChildren.push(...firstOrExpressionChildren)
-            andTokens.push(...firstOrExpression.tokens)
-          } else {
-            andChildren.push(firstOrExpression)
-          }
+          andChildren.push(firstOrExpression)
         }
 
         andTokens.push(cToken.i)
@@ -113,7 +108,8 @@ function getAnd(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObje
           {
             type: Expression.And,
             children: andChildren,
-            tokens: andTokens
+            tokens: andTokens,
+            closed: children.length > 1
           },
           ...restOrExpressions
         )
@@ -124,13 +120,10 @@ function getAnd(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObje
             type: Expression.Or,
             children: orChildren,
             tokens: nextExpression.tokens,
+            closed: children.length > 1
           },
           ...nextRest
         ]
-      } else if (nextExpression.type === Expression.And) {
-        const nextChildren = nextExpression.children || []
-        children.push(...nextChildren)
-        tokens.push(...nextExpression.tokens)
       } else {
         children.push(nextExpression)
       }
@@ -142,6 +135,7 @@ function getAnd(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObje
         type: Expression.And,
         children,
         tokens,
+        closed: children.length > 1
       },
       ...nextRest
     ]
@@ -151,7 +145,7 @@ function getAnd(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObje
 }
 
 
-export function getOr(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionObject[] | undefined {
+function getOr(cToken?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionObject[] | undefined {
   if (cToken && cToken.i.charRange.range === or) {
     const cNext = cToken?.n
     const tokens: TokenObject[] = []
@@ -166,20 +160,15 @@ export function getOr(cToken?: CItem<TokenObject>, previousExpressions: Expressi
     }
 
     if (nextExpression) {
-      if (nextExpression.type === Expression.Or) {
-        const nextChildren = nextExpression.children || []
-        children.push(...nextChildren)
-        tokens.push(...nextExpression.tokens)
-      } else {
-        children.push(nextExpression)
-      }
+      children.push(nextExpression)
     }
 
     return [
       ...previousExpressions.slice(0, -1), {
         type: Expression.Or,
         children,
-        tokens
+        tokens,
+        closed: children.length > 1
       },
       ...nextRest
     ]
@@ -225,7 +214,8 @@ function getBraced(cToken?: CItem<TokenObject>, previousExpressions: ExpressionO
       type: Expression.Braced,
       children,
       comment,
-      tokens
+      tokens,
+      closed: children.length > 0
     }
 
     return lastRBrace
@@ -248,7 +238,9 @@ function getAtom(cToken?: CItem<TokenObject>): ExpressionObject | undefined {
     return {
       type: Expression.Atom,
       atomType,
-      tokens: [cToken.i]
+      tokens: [cToken.i],
+      children: [],
+      closed: true
     }
   }
 
@@ -276,6 +268,5 @@ function _getSyntaxTree(cToken?: CItem<TokenObject>, previousExpression: Express
 
 export function getSyntaxTree(tokens: TokenObject[]) {
   const cToken = circulize(tokens)
-  const result = _getSyntaxTree(cToken)
-  return result
+  return _getSyntaxTree(cToken)
 }

@@ -51,7 +51,10 @@ export interface ExpressionObject {
   type: Expression
   atomType?: Atom
   tokens: TokenObject[]
-  children?: ExpressionObject[]
+  children: ExpressionObject[]
   comment?: string[]
+  closed: boolean
 }
 
+
+export type TreeTokenMap = Map<number, ExpressionObject[]>

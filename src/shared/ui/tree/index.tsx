@@ -3,27 +3,24 @@ import {ExpressionObject, Expression} from "@shared/types/editor"
 import {colorStyles} from "@shared/constants"
 
 const ExpressionObjectRenderer = ({object}: {object: ExpressionObject}) => {
-  const {type, children = []} = object
+  const {type, tokens, children, atomType} = object
 
-  return (
-    <div>
-      <div className={type}>{type}</div>
-      <Children>
-        {children.map((child, i) => {
-          const {tokens, type, atomType} = child
-          return type === Expression.Atom
-            ? tokens.map(({charRange}) => <div className={atomType} key={i}>{charRange.range}</div>)
-            : <ExpressionObjectRenderer object={child} key={i} />
-        })}
-      </Children>
-    </div>
-  )
+  return type === Expression.Atom
+    ? tokens.map(({charRange}, i) => <div key={i} className={atomType}>{charRange.range}</div>)
+    : (
+      <div>
+        <div className={type}>{type}</div>
+        <Children>
+          {children.map((child, i) => (<ExpressionObjectRenderer object={child} key={i} />))}
+        </Children>
+      </div>
+    )
 }
 
 export const Tree = ({tree}: {tree: ExpressionObject[]}) => {
   return (
     <Container>
-      {tree.map((expression) => <ExpressionObjectRenderer object={expression} />)}
+      {tree.map((expression, i) => <ExpressionObjectRenderer key={i} object={expression} />)}
     </Container>
   )
 }

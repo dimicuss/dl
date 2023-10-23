@@ -5,8 +5,9 @@ import {Transaction} from "prosemirror-state"
 
 export function colorize(t: Transaction, scheme: Schema, tree: ExpressionObject[] = []): Transaction {
   return tree.reduce((t, expression) => {
-    const colorizedT = expression.tokens.reduce((t, token) => {
-      const mark = scheme.marks[expression.atomType || expression.type]
+    const {tokens, atomType, type} = expression
+    const colorizedT = tokens.reduce((t, token) => {
+      const mark = scheme.marks[atomType || type]
       const {start, end} = token.charRange
       return mark ? t.addMark(start, end + 1, mark.create()) : t
     }, t)

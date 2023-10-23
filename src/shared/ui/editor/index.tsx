@@ -1,5 +1,5 @@
 import {useEffect, useRef, useState} from "react"
-import {EditorState, Transaction} from "prosemirror-state"
+import {EditorState, Transaction, Selection} from "prosemirror-state"
 import {EditorView} from "prosemirror-view"
 import {keymap} from "prosemirror-keymap"
 import {undo, redo, history} from "prosemirror-history"
@@ -15,6 +15,8 @@ import ProseMirrorStyles from 'prosemirror-view/style/prosemirror.css'
 import {Tree} from "../tree"
 import {styled} from "styled-components"
 import {colorStyles} from "@shared/constants"
+import {getTreeTokenMap} from "@shared/lib/getTreeTokenMap"
+import {getAutoComplete} from "@shared/lib/getAutoComplete"
 
 
 const initialState = {
@@ -68,21 +70,31 @@ const initialState = {
   }
 }
 
-
 export const Editor = () => {
   const [tree, setTree] = useState<ExpressionObject[]>([])
+  const [selection, setSelection] = useState<Selection | undefined>()
   const ref = useRef<HTMLDivElement | null>(null)
+  const tokenTreeMapRef = useRef<Map<number, ExpressionObject[]>[]>([])
+
+  useEffect(() => {
+    if (selection) {
+      tokenTreeMapRef.current.forEach((map) => {
+        console.log(getAutoComplete(map, selection))
+      })
+    }
+  }, [selection])
 
   useEffect(() => {
     function handleCurrentTransaction(t: Transaction) {
       const tokens = getTokens(getCharPositions(t.doc))
       const tree = getSyntaxTree(tokens)
-
       const colorizedState = colorize(t.removeMark(0, t.doc.content.size), schema, tree)
+      const treeTokenMap = tree.map(getTreeTokenMap)
 
       return {
+        tree,
         colorizedState,
-        tree
+        treeTokenMap
       }
     }
 
@@ -127,25 +139,27 @@ export const Editor = () => {
       }, initialState),
       dispatchTransaction(t) {
         if (t.docChanged) {
-          const {colorizedState, tree} = handleCurrentTransaction(t)
+          const {colorizedState, tree, treeTokenMap} = handleCurrentTransaction(t)
           setTree(tree)
+          tokenTreeMapRef.current = treeTokenMap
           view.updateState(view.state.apply(colorizedState))
         } else {
           view.updateState(view.state.apply(t))
         }
+
+        setSelection(t.selection)
       }
     })
 
-    const {colorizedState, tree} = handleCurrentTransaction(view.state.tr)
+    const {colorizedState, tree, treeTokenMap} = handleCurrentTransaction(view.state.tr)
     view.dispatch(colorizedState)
     setTree(tree)
+    tokenTreeMapRef.current = treeTokenMap
 
     return () => {
       view.destroy()
     }
   }, [])
-
-
 
   return (
     <>
@@ -162,6 +176,8 @@ export const Editor = () => {
 const Container = styled.div`
   ${ProseMirrorStyles}
   ${colorStyles}
+  
+  color: white;
   
   .invalid {
     text-decoration: underline;
