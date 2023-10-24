@@ -1,11 +1,11 @@
 import {useEffect, useRef, useState} from "react"
-import {EditorState, Transaction, Selection} from "prosemirror-state"
+import {EditorState, Transaction} from "prosemirror-state"
 import {EditorView} from "prosemirror-view"
 import {keymap} from "prosemirror-keymap"
 import {undo, redo, history} from "prosemirror-history"
 import {MarkSpec, Schema} from "prosemirror-model"
 import {baseKeymap} from "prosemirror-commands"
-import {Atom, Expression, ExpressionObject} from "../../types/editor"
+import {Atom, Expression, ExpressionObject, TreeTokenMap} from "../../types/editor"
 import {getTokens} from "@shared/lib/getTokens"
 import {getCharPositions} from "@shared/lib/getChars"
 import {colorize} from "@shared/lib/colorize"
@@ -14,10 +14,9 @@ import ProseMirrorStyles from 'prosemirror-view/style/prosemirror.css'
 import {Tree} from "../tree"
 import {styled} from "styled-components"
 import {colorStyles} from "@shared/constants"
-import {getTreeTokenMap} from "@shared/lib/getTreeTokenMap"
-import {getAutoComplete} from "@shared/lib/getAutoComplete"
 import {AutoCompSelection} from "@shared/ui/autocomp-selection"
 import {AutoComp} from "@shared/types/autocomp"
+import {getAutoCompMap} from "@shared/lib/getAutoCompMap"
 
 const initialState = {
   "doc": {
@@ -72,41 +71,39 @@ const initialState = {
 
 export const Editor = () => {
   const [tree, setTree] = useState<ExpressionObject[]>([])
-  const [selection, setSelection] = useState<Selection | undefined>()
+  const [editorState, setEditorState] = useState<EditorState | undefined>()
   const [autoComp, setAutoComp] = useState<AutoComp | undefined>()
-  const [tokenTree, setTokenTree] = useState<Map<number, ExpressionObject[]>[]>([])
   const ref = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     const windowSelection = window.getSelection()
-    if (windowSelection && selection && windowSelection.type === 'Caret') {
-      const completions = tokenTree.map((map) => getAutoComplete(map, selection)).find(Boolean)
+    if (windowSelection && editorState && windowSelection.type === 'Caret') {
       const {x, y} = windowSelection.getRangeAt(0).getBoundingClientRect()
+      const completions = tree
+        .map((t) => getAutoCompMap(t, editorState).get(editorState.selection.anchor))
+        .find(Boolean)
 
-      if (x > 0 && y > 0 && completions && completions.length > 0) {
+      if (completions && x > 0 && y > 0) {
         setAutoComp({
           x,
           y,
-          completions,
+          completions
         })
       } else {
         setAutoComp(undefined)
       }
     }
-  }, [selection, tokenTree])
+  }, [editorState, tree])
 
   useEffect(() => {
     function handleCurrentTransaction(t: Transaction) {
       const tokens = getTokens(getCharPositions(t.doc))
       const tree = getSyntaxTree(tokens)
-
       const colorizedState = colorize(t.removeMark(0, t.doc.content.size), schema, tree)
-      const treeTokenMap = tree.map(getTreeTokenMap)
 
       return {
         tree,
         colorizedState,
-        treeTokenMap
       }
     }
 
@@ -151,22 +148,21 @@ export const Editor = () => {
       }, initialState),
       dispatchTransaction(t) {
         if (t.docChanged) {
-          const {colorizedState, tree, treeTokenMap} = handleCurrentTransaction(t)
+          const {colorizedState, tree} = handleCurrentTransaction(t)
           setTree(tree)
-          setTokenTree(treeTokenMap)
           view.updateState(view.state.apply(colorizedState))
         } else {
           view.updateState(view.state.apply(t))
         }
 
-        setSelection(t.selection)
+        setEditorState(view.state)
       }
     })
 
-    const {colorizedState, tree, treeTokenMap} = handleCurrentTransaction(view.state.tr)
+    const {colorizedState, tree} = handleCurrentTransaction(view.state.tr)
     view.dispatch(colorizedState)
     setTree(tree)
-    setTokenTree(treeTokenMap)
+    setEditorState(view.state)
 
     return () => {
       view.destroy()

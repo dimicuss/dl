@@ -2,7 +2,6 @@ import {AutoComp} from "@shared/types/autocomp"
 import {CSSProperties} from "react"
 import styled from "styled-components"
 
-
 export const AutoCompSelection = ({object}: Props) => {
   const {x, y, completions} = object
 
