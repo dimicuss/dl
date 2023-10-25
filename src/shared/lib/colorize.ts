@@ -7,9 +7,9 @@ export function colorize(t: Transaction, schema: Schema, tree: ExpressionObject[
   return tree.reduce((t, expression) => {
     const {tokens, atomType, type, errors} = expression
 
-    const colorizedT = tokens.reduce((t, token) => {
+    const colorizedT = tokens.reduce((t, {charRange}) => {
       const mark = schema.marks[atomType || type]
-      const {start, end} = token.charRange
+      const {start, end} = charRange
       return mark ? t.addMark(start, end + 1, mark.create()) : t
     }, t)
 
