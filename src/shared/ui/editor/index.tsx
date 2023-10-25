@@ -3,7 +3,7 @@ import {EditorState, Transaction} from "prosemirror-state"
 import {EditorView} from "prosemirror-view"
 import {keymap} from "prosemirror-keymap"
 import {undo, redo, history} from "prosemirror-history"
-import {MarkSpec, Schema} from "prosemirror-model"
+import {Mark, MarkSpec, Schema} from "prosemirror-model"
 import {baseKeymap} from "prosemirror-commands"
 import {Atom, Expression, ExpressionObject} from "../../types/editor"
 import {getTokens} from "@shared/lib/getTokens"
@@ -77,34 +77,49 @@ export const Editor = () => {
 
   useEffect(() => {
     const windowSelection = window.getSelection()
-    if (windowSelection && editorState && windowSelection.type === 'Caret') {
-      const {x, y} = windowSelection.getRangeAt(0).getBoundingClientRect()
-      const completions = tree
-        .map((t) => getAutoCompMap(t, editorState).get(editorState.selection.anchor))
-        .find(Boolean)
+    if (windowSelection && windowSelection.type === 'Caret') {
+      if (editorState) {
+        const {x, y} = windowSelection.getRangeAt(0).getBoundingClientRect()
+        const completions = tree
+          .map((t) => getAutoCompMap(t, editorState).get(editorState.selection.anchor))
+          .find(Boolean)
 
-      if (completions && x > 0 && y > 0) {
-        setAutoComp({
-          x,
-          y,
-          completions
-        })
-      } else {
-        setAutoComp(undefined)
+        if (completions && x > 0 && y > 0) {
+          setAutoComp({
+            x,
+            y,
+            completions
+          })
+        } else {
+          setAutoComp(undefined)
+        }
       }
+    } else {
+      setAutoComp(undefined)
     }
   }, [editorState, tree])
 
   useEffect(() => {
-    const marks = [...Object.values(Atom), ...Object.values(Expression)].reduce((acc, type) => ({
+    const colorMarks = [...Object.values(Atom), ...Object.values(Expression)].reduce((acc, type) => ({
       ...acc,
       [type]: {
         toDOM: () => ['span', {class: String(type)}],
       }
-    }), {} as MarkSpec)
+    }), {} as Record<string, MarkSpec>)
 
     const schema = new Schema({
-      marks,
+      marks: {
+        error: {
+
+          attrs: {
+            'data-error': {
+              default: undefined,
+            }
+          },
+          toDOM: (mark: Mark) => ['span', {class: 'error', ...mark.attrs}],
+        },
+        ...colorMarks,
+      },
       nodes: {
         doc: {
           content: 'paragraph+',
@@ -186,8 +201,8 @@ const Container = styled.div`
   
   color: white;
   
-  .invalid {
-    text-decoration: underline;
+  .error {
+    text-decoration: underline red;
   }
 
   .doc {

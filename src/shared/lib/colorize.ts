@@ -3,15 +3,23 @@ import {Schema} from 'prosemirror-model'
 import {Transaction} from "prosemirror-state"
 
 
-export function colorize(t: Transaction, scheme: Schema, tree: ExpressionObject[] = []): Transaction {
+export function colorize(t: Transaction, schema: Schema, tree: ExpressionObject[] = []): Transaction {
   return tree.reduce((t, expression) => {
-    const {tokens, atomType, type} = expression
+    const {tokens, atomType, type, errors} = expression
+
     const colorizedT = tokens.reduce((t, token) => {
-      const mark = scheme.marks[atomType || type]
+      const mark = schema.marks[atomType || type]
       const {start, end} = token.charRange
       return mark ? t.addMark(start, end + 1, mark.create()) : t
     }, t)
 
-    return colorize(colorizedT, scheme, expression.children)
+    const errorredT = errors.reduce((t, {start, end, text}) => {
+      const mark = schema.marks.error
+      const handledStart = start || 0
+      const handledEnd = end ? end + 1 : t.doc.content.size
+      return mark ? t.addMark(handledStart, handledEnd, mark.create({'data-error': text})) : t
+    }, colorizedT)
+
+    return colorize(errorredT, schema, expression.children)
   }, t)
 }

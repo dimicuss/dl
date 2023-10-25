@@ -52,7 +52,7 @@ export interface ExpressionObject {
   atomType?: Atom
   tokens: TokenObject[]
   children: ExpressionObject[]
-  comment?: string[]
+  errors: Error[]
   closed: boolean
   completions: AutoCompleteItem[]
 }
@@ -64,8 +64,14 @@ export interface TreeTokenMap {
   minIndex: number
 }
 
-export type AutoCompleteItem = {
+export interface AutoCompleteItem {
   start: number | undefined
   end: number | undefined
   completions: string[]
+}
+
+export interface Error {
+  start?: number
+  end?: number
+  text: string
 }

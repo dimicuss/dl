@@ -1,5 +1,5 @@
 import {CItem} from '@shared/types/circulize'
-import {ExpressionObject, TokenObject, Tokens, Expression, Atom, AutoCompleteItem} from "../types/editor";
+import {ExpressionObject, TokenObject, Tokens, Expression, Atom, AutoCompleteItem, Error} from "../types/editor";
 import {circulize, findCItem} from "./circulize";
 import {eq, lessEq, notEq, more, less, moreEq, and, or, stringRegEx, keywords, numberRegEx} from './tokens';
 
@@ -36,86 +36,110 @@ const expressionAutoComplete = new Map([
   [Atom.Keyword, keywordAutoComplete]
 ])
 
-function _getSyntaxTree(cToken?: CItem<TokenObject>, endCItem?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionObject[] {
-  if (cToken && cToken !== endCItem) {
-    const atom = getAtom(cToken, endCItem)
+function getErrorRange(tokens: TokenObject[]) {
+  return {
+    start: tokens?.[0]?.charRange?.start,
+    end: tokens?.at(-1)?.charRange?.end,
+  }
+}
+
+function _getSyntaxTree(cItem?: CItem<TokenObject>, endCItem?: CItem<TokenObject>, previousExpressions: ExpressionObject[] = []): ExpressionObject[] {
+  if (cItem && cItem !== endCItem) {
+    const atom = getAtom(cItem, endCItem)
 
     if (atom) {
-      return _getSyntaxTree(cToken.n, endCItem, [...previousExpressions, atom])
+      return _getSyntaxTree(cItem.n, endCItem, [...previousExpressions, atom])
     }
 
-    const type = equationTokens.get(cToken.i.charRange.range)
+    const type = equationTokens.get(cItem.i.charRange.range)
 
     if (type) {
-      const nextAtom = getAtom(cToken.n, endCItem)
+      const nextAtom = getAtom(cItem.n, endCItem)
       const previousAtom = previousExpressions.at(-1)
       let handledPreviousExpressions = previousExpressions
 
       let next: CItem<TokenObject> | undefined
       let completions: AutoCompleteItem[] = []
       const children: ExpressionObject[] = []
-      const comment: string[] = []
-      const tokens = [cToken.i]
-
+      const tokens = [cItem.i]
+      const errors: Error[] = []
 
       if (previousAtom?.atomType) {
         if (!nextAtom?.atomType) {
           completions.push({
-            start: cToken.i.charRange.end,
-            end: cToken?.n?.i?.charRange?.start,
+            start: cItem.i.charRange.end,
+            end: cItem?.n?.i?.charRange?.start,
             completions: expressionAutoComplete.get(previousAtom.atomType) || []
           })
         }
 
         if (!equationArgsTokens.includes(previousAtom.atomType)) {
-          comment.push(`First argument is invalid. Type: "${previousAtom.atomType}"`)
+          errors.push({
+            ...getErrorRange(previousAtom.tokens),
+            text: `First argument is invalid. Type: "${previousAtom.atomType}"`
+          })
         }
         handledPreviousExpressions = previousExpressions.slice(0, -1)
         children.push(previousAtom)
       } else {
-        comment.push('First argument is not defined')
+        errors.push({
+          start: cItem.i.charRange.end,
+          end: cItem.i.charRange.end,
+          text: 'First argument is not defined'
+        })
       }
 
       if (nextAtom?.atomType) {
         if (!previousAtom?.atomType) {
           completions.push({
-            start: cToken?.p?.i?.charRange?.end,
-            end: cToken.i.charRange.start,
+            start: cItem?.p?.i?.charRange?.end,
+            end: cItem.i.charRange.start,
             completions: expressionAutoComplete.get(nextAtom.atomType) || []
           })
         }
         if (!equationArgsTokens.includes(nextAtom.atomType)) {
-          comment.push(`Second argument is invalid. Type: "${nextAtom.atomType}"`)
+          errors.push({
+            ...getErrorRange(nextAtom.tokens),
+            text: `Second argument is invalid. Type: "${nextAtom.atomType}"`
+          })
         }
         children.push(nextAtom)
-        next = cToken?.n?.n
+        next = cItem?.n?.n
       } else {
-        next = cToken.n
-        comment.push('Second argument is not defined')
+        next = cItem.n
+        errors.push({
+          start: cItem.i.charRange.end,
+          end: cItem.i.charRange.end,
+          text: 'First argument is not defined'
+        })
       }
 
       if (!previousAtom && !nextAtom) {
         completions.push(
           {
-            start: cToken?.p?.i?.charRange?.end,
-            end: cToken?.i.charRange.start,
+            start: cItem?.p?.i?.charRange?.end,
+            end: cItem?.i.charRange.start,
             completions: fullAutoComplete
           },
           {
-            start: cToken?.i.charRange.end,
-            end: cToken?.n?.i?.charRange?.start,
+            start: cItem?.i.charRange.end,
+            end: cItem?.n?.i?.charRange?.start,
             completions: fullAutoComplete
           }
         )
       }
 
       if (nextAtom?.atomType && previousAtom?.atomType && !equationArgMap.get(previousAtom.atomType)?.includes(nextAtom.atomType)) {
-        comment.push('Arguments should be [Keyword, String | Number] or vice versa. 1st: "${previousToken.type}", 2nd: "${nextToken.type}"')
+        errors.push({
+          start: getErrorRange(previousAtom.tokens).start,
+          end: getErrorRange(nextAtom.tokens).end,
+          text: 'Arguments should be [Keyword, String | Number] or vice versa. 1st: "${previousToken.type}", 2nd: "${nextToken.type}"'
+        })
       }
 
       return _getSyntaxTree(next, endCItem, [...handledPreviousExpressions, {
         type,
-        comment,
+        errors,
         children,
         tokens,
         closed: completions.length > 0,
@@ -124,23 +148,22 @@ function _getSyntaxTree(cToken?: CItem<TokenObject>, endCItem?: CItem<TokenObjec
     }
 
 
-    if (cToken.i.charRange.range === and) {
+    if (cItem.i.charRange.range === and) {
       const tokens: TokenObject[] = []
       const children: ExpressionObject[] = []
       const previousExpression = previousExpressions.at(-1)
 
-      const [nextExpression, ...nextRest] = _getSyntaxTree(cToken.n, endCItem)
+      const [nextExpression, ...nextRest] = _getSyntaxTree(cItem.n, endCItem)
 
-      tokens.push(cToken.i)
+      tokens.push(cItem.i)
 
       if (previousExpression) {
         children.push(previousExpression)
       }
-
       if (nextExpression) {
         if (nextExpression.type === Expression.Or) {
-          const orChildren: ExpressionObject[] = []
           const andTokens: TokenObject[] = []
+          const orChildren: ExpressionObject[] = []
           const andChildren: ExpressionObject[] = [...children]
           const nextChildren = nextExpression.children || []
           const [firstOrExpression, ...restOrExpressions] = nextChildren
@@ -149,7 +172,7 @@ function _getSyntaxTree(cToken?: CItem<TokenObject>, endCItem?: CItem<TokenObjec
             andChildren.push(firstOrExpression)
           }
 
-          andTokens.push(cToken.i)
+          andTokens.push(cItem.i)
 
           orChildren.push(
             {
@@ -157,7 +180,8 @@ function _getSyntaxTree(cToken?: CItem<TokenObject>, endCItem?: CItem<TokenObjec
               children: andChildren,
               tokens: andTokens,
               closed: andChildren.length > 1,
-              completions: []
+              completions: [],
+              errors: []
             },
             ...restOrExpressions
           )
@@ -169,7 +193,8 @@ function _getSyntaxTree(cToken?: CItem<TokenObject>, endCItem?: CItem<TokenObjec
               children: orChildren,
               tokens: nextExpression.tokens,
               closed: orChildren.length > 1,
-              completions: []
+              completions: [],
+              errors: []
             },
             ...nextRest
           ]
@@ -185,19 +210,20 @@ function _getSyntaxTree(cToken?: CItem<TokenObject>, endCItem?: CItem<TokenObjec
           children,
           tokens,
           closed: children.length > 1,
-          completions: []
+          completions: [],
+          errors: []
         },
         ...nextRest
       ]
     }
 
-    if (cToken.i.charRange.range === or) {
+    if (cItem.i.charRange.range === or) {
       const tokens: TokenObject[] = []
       const children: ExpressionObject[] = []
       const previousExpression = previousExpressions.at(-1)
-      const [nextExpression, ...nextRest] = _getSyntaxTree(cToken.n, endCItem)
+      const [nextExpression, ...nextRest] = _getSyntaxTree(cItem.n, endCItem)
 
-      tokens.push(cToken.i)
+      tokens.push(cItem.i)
 
       if (previousExpression) {
         children.push(previousExpression)
@@ -213,46 +239,59 @@ function _getSyntaxTree(cToken?: CItem<TokenObject>, endCItem?: CItem<TokenObjec
           children,
           tokens,
           closed: children.length > 1,
-          completions: []
+          completions: [],
+          errors: []
         },
         ...nextRest
       ]
     }
 
-    if (cToken.i.type === Tokens.LBrace) {
-      const comment: string[] = []
+    if (cItem.i.type === Tokens.LBrace) {
+      const errors: Error[] = []
       const tokens: TokenObject[] = []
 
       let rBraceCount = 0
       let lBraceCount = 1
-      const lastRBrace = findCItem(cToken.n, ({i}) => {
+      const lastRBrace = findCItem(cItem.n, ({i}) => {
         if (i.type === Tokens.RBrace) rBraceCount++
         if (i.type === Tokens.LBrace) lBraceCount++
         return rBraceCount === lBraceCount
       })
 
-      const children = _getSyntaxTree(cToken.n, lastRBrace)
+      const children = _getSyntaxTree(cItem.n, lastRBrace)
 
-      tokens.push(cToken.i)
+      tokens.push(cItem.i)
 
       if (children.length < 1) {
-        comment.push('Empty braces')
+        errors.push({
+          start: cItem.i.charRange.start,
+          end: lastRBrace?.i?.charRange?.end,
+          text: 'Empty braces'
+        })
       }
 
       if (children.length > 1) {
-        comment.push('Braces cannot have more expression than one')
+        errors.push({
+          start: cItem.i.charRange.start,
+          end: lastRBrace?.i?.charRange?.end,
+          text: 'Braces cannot have more expression than one'
+        })
       }
 
       if (lastRBrace) {
         tokens.push(lastRBrace.i)
       } else {
-        comment.push('Unclosed brace')
+        errors.push({
+          start: cItem.i.charRange.start,
+          end: cItem.i.charRange.start,
+          text: 'Unclosed brace'
+        })
       }
 
       const expression: ExpressionObject = {
         type: Expression.Braced,
         children,
-        comment,
+        errors,
         tokens,
         closed: children.length > 0,
         completions: []
@@ -269,22 +308,32 @@ function _getSyntaxTree(cToken?: CItem<TokenObject>, endCItem?: CItem<TokenObjec
   return previousExpressions
 }
 
-function getAtom(cToken?: CItem<TokenObject>, endToken?: CItem<TokenObject>): ExpressionObject | undefined {
-  if (cToken && cToken !== endToken && atomTokens.includes(cToken.i.type)) {
-    const {range} = cToken.i.charRange
+function getAtom(cItem?: CItem<TokenObject>, endToken?: CItem<TokenObject>): ExpressionObject | undefined {
+  if (cItem && cItem !== endToken && atomTokens.includes(cItem.i.type)) {
+    const {range} = cItem.i.charRange
+    const errors: Error[] = []
     const atomType =
       keywords.includes(range) && Atom.Keyword ||
       stringRegEx.test(range) && Atom.String ||
       numberRegEx.test(range) && Atom.Number ||
       Atom.Invalid
 
+    if (atomType === Atom.Invalid) {
+      errors.push({
+        start: cItem.i.charRange.start,
+        end: cItem.i.charRange.end,
+        text: 'Invalid atom detected'
+      })
+    }
+
     return {
       type: Expression.Atom,
       atomType,
-      tokens: [cToken.i],
+      tokens: [cItem.i],
       children: [],
       closed: true,
-      completions: []
+      completions: [],
+      errors,
     }
   }
 }
