@@ -1,12 +1,11 @@
 import {CItem} from '@shared/types/circulize'
 
-function _circulize<T>(items: T[], n = 0, previous?: CItem<T>, onItem?: (item: T, cItem: CItem<T>) => void): CItem<T> | undefined {
+function _circulize<T>(items: T[], n = 0, previous?: CItem<T>): CItem<T> | undefined {
   const item = items[n]
 
   if (item) {
     const currentItem: CItem<T> = {i: item}
-    onItem?.(item, currentItem)
-    const nextItem = _circulize(items, n + 1, currentItem, onItem)
+    const nextItem = _circulize(items, n + 1, currentItem)
 
     currentItem.p = previous
     currentItem.n = nextItem
@@ -48,11 +47,7 @@ export function findCItem<T>(cItem: CItem<T> | undefined, p: (i: CItem<T>) => bo
 }
 
 export function circulize<T>(items: T[]) {
-  const map = new Map<T, CItem<T>>()
-  const cItem = _circulize(items, 0, undefined, (item, cItem) => {
-    map.set(item, cItem)
-  })
-  return {cItem, map}
+  return _circulize(items)
 }
 
 export function copyCItem<T>(cItem: CItem<T> | undefined, p: (cItem: CItem<T>) => boolean) {

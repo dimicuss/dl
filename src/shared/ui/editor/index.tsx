@@ -5,7 +5,7 @@ import {keymap} from "prosemirror-keymap"
 import {undo, redo, history} from "prosemirror-history"
 import {MarkSpec, Schema} from "prosemirror-model"
 import {baseKeymap} from "prosemirror-commands"
-import {Atom, Expression, ExpressionObject, TreeTokenMap} from "../../types/editor"
+import {Atom, Expression, ExpressionObject} from "../../types/editor"
 import {getTokens} from "@shared/lib/getTokens"
 import {getCharPositions} from "@shared/lib/getChars"
 import {colorize} from "@shared/lib/colorize"
@@ -96,17 +96,6 @@ export const Editor = () => {
   }, [editorState, tree])
 
   useEffect(() => {
-    function handleCurrentTransaction(t: Transaction) {
-      const tokens = getTokens(getCharPositions(t.doc))
-      const tree = getSyntaxTree(tokens)
-      const colorizedState = colorize(t.removeMark(0, t.doc.content.size), schema, tree)
-
-      return {
-        tree,
-        colorizedState,
-      }
-    }
-
     const marks = [...Object.values(Atom), ...Object.values(Expression)].reduce((acc, type) => ({
       ...acc,
       [type]: {
@@ -148,7 +137,7 @@ export const Editor = () => {
       }, initialState),
       dispatchTransaction(t) {
         if (t.docChanged) {
-          const {colorizedState, tree} = handleCurrentTransaction(t)
+          const {colorizedState, tree} = handleCurrentTransaction(t, schema)
           setTree(tree)
           view.updateState(view.state.apply(colorizedState))
         } else {
@@ -159,7 +148,7 @@ export const Editor = () => {
       }
     })
 
-    const {colorizedState, tree} = handleCurrentTransaction(view.state.tr)
+    const {colorizedState, tree} = handleCurrentTransaction(view.state.tr, schema)
     view.dispatch(colorizedState)
     setTree(tree)
     setEditorState(view.state)
@@ -180,7 +169,16 @@ export const Editor = () => {
   )
 }
 
+function handleCurrentTransaction(t: Transaction, schema: Schema) {
+  const tokens = getTokens(getCharPositions(t.doc))
+  const tree = getSyntaxTree(tokens)
+  const colorizedState = colorize(t.removeMark(0, t.doc.content.size), schema, tree)
 
+  return {
+    tree,
+    colorizedState,
+  }
+}
 
 const Container = styled.div`
   ${ProseMirrorStyles}
