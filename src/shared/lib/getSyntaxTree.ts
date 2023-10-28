@@ -76,14 +76,14 @@ function _getSyntaxTree(cItem?: CItem<TokenObject>, endCItem?: CItem<TokenObject
         if (!equationArgsTokens.includes(previousAtom.atomType)) {
           errors.push({
             ...getErrorRange(previousAtom.tokens),
-            text: `First argument is invalid. Type: "${previousAtom.atomType}"`
+            text: `First argument is invalid. Type: ${previousAtom.atomType}`
           })
         }
         handledPreviousExpressions = previousExpressions.slice(0, -1)
         children.push(previousAtom)
       } else {
         errors.push({
-          start: cItem.i.charRange.end,
+          start: cItem.i.charRange.start,
           end: cItem.i.charRange.end,
           text: 'First argument is not defined'
         })
@@ -100,7 +100,7 @@ function _getSyntaxTree(cItem?: CItem<TokenObject>, endCItem?: CItem<TokenObject
         if (!equationArgsTokens.includes(nextAtom.atomType)) {
           errors.push({
             ...getErrorRange(nextAtom.tokens),
-            text: `Second argument is invalid. Type: "${nextAtom.atomType}"`
+            text: `Second argument is invalid. Type: ${nextAtom.atomType}`
           })
         }
         children.push(nextAtom)
@@ -133,7 +133,7 @@ function _getSyntaxTree(cItem?: CItem<TokenObject>, endCItem?: CItem<TokenObject
         errors.push({
           start: getErrorRange(previousAtom.tokens).start,
           end: getErrorRange(nextAtom.tokens).end,
-          text: 'Arguments should be [Keyword, String | Number] or vice versa. 1st: "${previousToken.type}", 2nd: "${nextToken.type}"'
+          text: `Arguments should be [Keyword, String | Number] or vice versa. 1st: "${previousAtom.atomType}", 2nd: "${nextAtom.atomType}"`
         })
       }
 
