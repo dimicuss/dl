@@ -4,12 +4,6 @@ export const lineBreak: LineBreak = {}
 export const lBrace = '('
 export const rBrace = ')'
 export const whiteSpace = ' '
-export const delimieters: Symbol[] = [
-  lBrace,
-  rBrace,
-  whiteSpace,
-  lineBreak
-]
 
 export const keywords = [
   'Фамилия',
@@ -24,11 +18,16 @@ export const moreEq = '>='
 export const lessEq = '<='
 export const more = '>'
 export const less = '<'
-export const and = '&'
-export const or = '|'
+export const and = '&&'
+export const or = '||'
 
 export const expressionTokens = [eq, notEq, moreEq, lessEq, more, less, and, or]
 
 export const numberRegEx = /^-?\d+(\.\d+)?$/
 
-export const stringRegEx = /^[a-zA-Zа-яА-Я]+$/
+export const stringRegEx = /^[\w]+$/
+
+export const delimieters: Symbol[] = [
+  whiteSpace,
+  lineBreak,
+]

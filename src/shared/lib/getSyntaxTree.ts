@@ -283,7 +283,6 @@ function _getSyntaxTree(cItem?: CItem<TokenObject>, endCItem?: CItem<TokenObject
       } else {
         errors.push({
           start: cItem.i.charRange.start,
-          end: cItem.i.charRange.start,
           text: 'Unclosed brace'
         })
       }

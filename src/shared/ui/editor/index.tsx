@@ -28,35 +28,7 @@ const initialState = {
         "content": [
           {
             "type": "text",
-            "text": "Возраст >= a & (Отчество <= b | ((Фамилия != c) & Имя = d)) |",
-          }
-        ]
-      },
-      {
-        "type": "paragraph",
-        "content": [
-          {
-            "type": "text",
-            "text": "Фамилия > d |",
-          }
-        ]
-      },
-      {
-        "type": "paragraph",
-        "content": [
-          {
-            "type": "text",
-            "text": "Фамилия >= f & Имя = g & Отчество < h",
-
-          }
-        ]
-      },
-      {
-        "type": "paragraph",
-        "content": [
-          {
-            "type": "text",
-            "text": "Возраст < 27 | Имя =",
+            "text": "Возраст >= a",
           }
         ]
       },

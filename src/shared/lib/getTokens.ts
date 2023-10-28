@@ -1,14 +1,10 @@
-import {CharPosition, CharRange, Symbol, TokenObject, Tokens} from "../types/editor";
-import {keywords, numberRegEx, stringRegEx, rBrace, lBrace, delimieters, expressionTokens} from "./tokens";
-
-function isDelimiter(c: Symbol) {
-  return delimieters.includes(c)
-}
+import {CharPosition, CharRange, TokenObject, Tokens} from "../types/editor";
+import {rBrace, lBrace, delimieters, expressionTokens} from "./tokens";
 
 function getSubChars(chars: CharPosition[], left: number, right: number) {
   const subChars: CharPosition[] = []
 
-  for (let i = left; i <= right; i++) {
+  for (let i = left; i < right; i++) {
     subChars.push(chars[i] as CharPosition)
   }
 
@@ -38,41 +34,37 @@ export function getTokens(chars: CharPosition[]) {
   let len = chars.length
   const result: TokenObject[] = []
 
-  while (right < len && left <= right) {
-    const currentCharP = chars[right] as CharPosition
-    const char = currentCharP.char
+  while (right <= len) {
+    const nextChar = chars[right]?.char
 
-    if (!isDelimiter(char)) {
-      right++
-    }
+    if (nextChar === undefined || delimieters.includes(nextChar)) {
+      const subChars = getSubChars(chars, left, right);
 
-    if (isDelimiter(char) && left === right) {
-      const charRange = getCharRange([currentCharP])
+      if (subChars.length) {
+        const charRange = getCharRange(subChars)
+        const subStr = charRange.range
 
-      if (char === rBrace) {
-        result.push(getToken(charRange, Tokens.RBrace))
-      }
+        if (subStr === rBrace) {
+          result.push(getToken(charRange, Tokens.RBrace))
+        }
 
-      if (char === lBrace) {
-        result.push(getToken(charRange, Tokens.LBrace))
+        else if (subStr === lBrace) {
+          result.push(getToken(charRange, Tokens.LBrace))
+        }
+
+        else if (expressionTokens.includes(subStr)) {
+          result.push(getToken(charRange, Tokens.Expression))
+        }
+
+        else {
+          result.push(getToken(charRange, Tokens.Atom))
+        }
       }
 
       right++
       left = right
-    } else if (isDelimiter(char) && left !== right || right === len && left !== right) {
-      const subChars = getSubChars(chars, left, right - 1);
-      const charRange = getCharRange(subChars)
-      const subStr = charRange.range
-
-      if (expressionTokens.includes(subStr)) {
-        result.push(getToken(charRange, Tokens.Expression))
-      }
-
-      else {
-        result.push(getToken(charRange, Tokens.Atom))
-      }
-
-      left = right
+    } else {
+      right++
     }
   }
 
