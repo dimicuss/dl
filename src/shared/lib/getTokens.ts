@@ -9,7 +9,7 @@ function getSubChars(chars: CharPosition[], left: number, right: number) {
   const subChars: CharPosition[] = []
 
   for (let i = left; i <= right; i++) {
-    subChars.push(chars[i])
+    subChars.push(chars[i] as CharPosition)
   }
 
   return subChars;
@@ -19,8 +19,8 @@ function getCharRange(chars: CharPosition[]): CharRange {
   const range = chars.reduce((result, {char}) => result + char, '')
 
   return {
-    start: chars[0].pos,
-    end: chars[chars.length - 1].pos,
+    start: chars?.[0]?.pos as number,
+    end: chars?.[chars.length - 1]?.pos as number,
     range,
   }
 }
@@ -39,7 +39,7 @@ export function getTokens(chars: CharPosition[]) {
   const result: TokenObject[] = []
 
   while (right < len && left <= right) {
-    const currentCharP = chars[right]
+    const currentCharP = chars[right] as CharPosition
     const char = currentCharP.char
 
     if (!isDelimiter(char)) {

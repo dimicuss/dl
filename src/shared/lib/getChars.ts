@@ -18,7 +18,7 @@ export function getCharPositions(doc: Node) {
       for (let i = 0; i < text.length; i++) {
         result.push({
           pos: pos + i,
-          char: text[i]
+          char: text?.[i] as string
         })
       }
     }
