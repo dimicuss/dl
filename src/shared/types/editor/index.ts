@@ -19,7 +19,7 @@ export enum Tokens {
   LineBreak = 'line_break',
   WhiteSpace = 'white_space',
   Expression = 'expression',
-  Atom = 'atom'
+  Atom = 'atom',
 }
 
 export interface TokenObject {

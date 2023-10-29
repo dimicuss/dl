@@ -1,7 +1,7 @@
 import {CItem} from '@shared/types/circulize'
 import {ExpressionObject, TokenObject, Tokens, Expression, Atom, AutoCompleteItem, Error} from "../types/editor";
-import {circulize, findCItem} from "./circulize";
-import {eq, lessEq, notEq, more, less, moreEq, and, or, stringRegEx, keywords, numberRegEx} from './tokens';
+import {findCItem} from "./circulize";
+import {eq, lessEq, notEq, more, less, moreEq, andAnd, orOr, stringRegEx, keywords, numberRegEx} from './tokens';
 
 const equationTokens = new Map([
   [eq, Expression.Eq],
@@ -148,7 +148,7 @@ function _getSyntaxTree(cItem?: CItem<TokenObject>, endCItem?: CItem<TokenObject
     }
 
 
-    if (cItem.i.charRange.range === and) {
+    if (cItem.i.charRange.range === andAnd) {
       const tokens: TokenObject[] = []
       const children: ExpressionObject[] = []
       const previousExpression = previousExpressions.at(-1)
@@ -217,7 +217,7 @@ function _getSyntaxTree(cItem?: CItem<TokenObject>, endCItem?: CItem<TokenObject
       ]
     }
 
-    if (cItem.i.charRange.range === or) {
+    if (cItem.i.charRange.range === orOr) {
       const tokens: TokenObject[] = []
       const children: ExpressionObject[] = []
       const previousExpression = previousExpressions.at(-1)
@@ -337,7 +337,6 @@ function getAtom(cItem?: CItem<TokenObject>, endToken?: CItem<TokenObject>): Exp
   }
 }
 
-export function getSyntaxTree(tokens: TokenObject[]) {
-  const cItem = circulize(tokens)
-  return _getSyntaxTree(cItem)
+export function getSyntaxTree(tokens: CItem<TokenObject> | undefined) {
+  return _getSyntaxTree(tokens)
 }

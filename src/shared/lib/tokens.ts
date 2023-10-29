@@ -13,21 +13,27 @@ export const keywords = [
 ]
 
 export const eq = '='
-export const notEq = '!='
-export const moreEq = '>='
-export const lessEq = '<='
+export const or = '|'
+export const and = '&'
+export const not = '!'
 export const more = '>'
 export const less = '<'
-export const and = '&&'
-export const or = '||'
 
-export const expressionTokens = [eq, notEq, moreEq, lessEq, more, less, and, or]
+export const orOr = `${or}${or}`
+export const notEq = `${not}${eq}`
+export const moreEq = `${more}${eq}`
+export const lessEq = `${less}${eq}`
+export const andAnd = `${and}${and}`
 
 export const numberRegEx = /^-?\d+(\.\d+)?$/
 
-export const stringRegEx = /^[\w]+$/
+export const stringRegEx = /^[a-zA-Zа-яА-Я0-9]+$/
 
-export const delimieters: Symbol[] = [
-  whiteSpace,
-  lineBreak,
+export const delimiters: Symbol[] = [
+  eq,
+  more,
+  less,
+  not,
+  and,
+  or
 ]
