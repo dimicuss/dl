@@ -1,6 +1,6 @@
 import {Node} from "prosemirror-model";
-import {CharPosition} from "../types/editor";
-import {lineBreak} from "./tokens";
+import {CharPosition} from "shared/types/editor";
+import {lineBreak} from "shared/constants";
 
 export function getCharPositions(doc: Node) {
   const result: CharPosition[] = []

@@ -7,7 +7,7 @@ import {Mark, MarkSpec, Schema} from "prosemirror-model"
 import {baseKeymap} from "prosemirror-commands"
 import {Atom, Expression, ExpressionObject} from "../../types/editor"
 import {getTokens} from "shared/lib/getTokens"
-import {getCharPositions} from "shared/lib/getChars"
+import {getCharPositions} from "shared/lib/getCharPositions"
 import {colorize} from "shared/lib/colorize"
 import {getSyntaxTree} from "shared/lib/getSyntaxTree"
 import ProseMirrorStyles from 'prosemirror-view/style/prosemirror.css'
@@ -109,7 +109,6 @@ export const Editor = () => {
     const schema = new Schema({
       marks: {
         error: {
-
           attrs: {
             'data-error': {
               default: undefined,

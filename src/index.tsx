@@ -8,8 +8,3 @@ document.body.appendChild(appRoot)
 const root = createRoot(appRoot)
 
 root.render(<App />)
-
-
-
-
-
