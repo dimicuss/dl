@@ -17,6 +17,7 @@ import {colorStyles} from "shared/constants"
 import {AutoCompSelection} from "shared/ui/autocomp-selection"
 import {AutoComp} from "shared/types/autocomp"
 import {getAutoCompMap} from "shared/lib/getAutoCompMap"
+import {Error} from "../error"
 
 const initialState = {
   "doc": {
@@ -178,6 +179,7 @@ export const Editor = () => {
       </Container>
       <Tree tree={tree} />
       {autoComp && <AutoCompSelection object={autoComp} />}
+      <Error />
     </>
   )
 }

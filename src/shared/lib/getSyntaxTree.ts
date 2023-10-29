@@ -108,9 +108,9 @@ function _getSyntaxTree(cItem?: CItem<TokenObject>, endCItem?: CItem<TokenObject
       } else {
         next = cItem.n
         errors.push({
-          start: cItem.i.charRange.end,
+          start: cItem.i.charRange.start,
           end: cItem.i.charRange.end,
-          text: 'First argument is not defined'
+          text: 'Second argument is not defined'
         })
       }
 

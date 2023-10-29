@@ -2,7 +2,7 @@ import {CItem} from "shared/types/circulize";
 import {CharPosition, TokenObject, Tokens} from "../types/editor";
 import {rBrace, lBrace, whiteSpace, lineBreak, eq, not, more, less, and, or} from "shared/constants";
 
-function getToken(type: Tokens, chars: CharPosition[]): TokenObject {
+function getToken(type: Tokens, ...chars: CharPosition[]): TokenObject {
   const range = chars.reduce((result, {char}) => result + char, '')
 
   const charRange = {
@@ -20,8 +20,8 @@ function getToken(type: Tokens, chars: CharPosition[]): TokenObject {
 export function getTokens(chars: CharPosition[]): CItem<TokenObject> | undefined {
   let result: CItem<TokenObject> | undefined
 
-  const linkResult = (type: Tokens, chars: CharPosition[]) => {
-    const newItem = getToken(type, chars)
+  const linkResult = (type: Tokens, ...chars: CharPosition[]) => {
+    const newItem = getToken(type, ...chars)
 
     if (result) {
       const newResult = {
@@ -63,33 +63,33 @@ export function getTokens(chars: CharPosition[]): CItem<TokenObject> | undefined
 
     if (c.char === eq) {
       if (pC?.char === not || pC?.char === more || pC?.char === less) {
-        linkResult(Tokens.Expression, [pC, c])
+        linkResult(Tokens.Expression, pC, c)
         i--
       } else {
-        linkResult(Tokens.Expression, [c])
+        linkResult(Tokens.Expression, c)
       }
     } else if (c.char === more || c.char === less) {
-      linkResult(Tokens.Expression, [c])
+      linkResult(Tokens.Expression, c)
     } else if (c.char === or) {
       if (pC?.char === or) {
-        linkResult(Tokens.Expression, [pC, c])
+        linkResult(Tokens.Expression, pC, c)
         i--
       } else {
-        linkResult(Tokens.Atom, [c])
+        linkResult(Tokens.Atom, c)
       }
     } else if (c.char === and) {
       if (pC?.char === and) {
-        linkResult(Tokens.Expression, [pC, c])
+        linkResult(Tokens.Expression, pC, c)
         i--
       } else {
-        linkResult(Tokens.Atom, [c])
+        linkResult(Tokens.Atom, c)
       }
     } else if (c.char === not) {
-      linkResult(Tokens.Atom, [c])
+      linkResult(Tokens.Atom, c)
     } else if (c.char === lBrace) {
-      linkResult(Tokens.LBrace, [c])
+      linkResult(Tokens.LBrace, c)
     } else if (c.char === rBrace) {
-      linkResult(Tokens.RBrace, [c])
+      linkResult(Tokens.RBrace, c)
     }
     else if (c.char === whiteSpace || c.char === lineBreak) {
       continue
@@ -104,7 +104,7 @@ export function getTokens(chars: CharPosition[]): CItem<TokenObject> | undefined
           }
         })
       } else {
-        linkResult(Tokens.Atom, [c])
+        linkResult(Tokens.Atom, c)
       }
     }
 
