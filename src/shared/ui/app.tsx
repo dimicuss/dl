@@ -1,5 +1,5 @@
 import {createGlobalStyle, styled} from "styled-components"
-import {Editor} from '@shared/ui/editor'
+import {Editor} from 'shared/ui/editor'
 
 export const App = () => {
   return (

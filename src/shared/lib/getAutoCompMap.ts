@@ -1,5 +1,5 @@
 import {EditorState} from "prosemirror-state"
-import {ExpressionObject} from "@shared/types/editor";
+import {ExpressionObject} from "shared/types/editor";
 import {forEachTree} from "./mapTree";
 
 export function getAutoCompMap(tree: ExpressionObject, editorState: EditorState) {

@@ -1,4 +1,4 @@
-import {ExpressionObject} from '@shared/types/editor'
+import {ExpressionObject} from 'shared/types/editor'
 import {Schema} from 'prosemirror-model'
 import {Transaction} from "prosemirror-state"
 

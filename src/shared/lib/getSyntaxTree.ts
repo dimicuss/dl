@@ -1,4 +1,4 @@
-import {CItem} from '@shared/types/circulize'
+import {CItem} from 'shared/types/circulize'
 import {ExpressionObject, TokenObject, Tokens, Expression, Atom, AutoCompleteItem, Error} from "../types/editor";
 import {findCItem} from "./circulize";
 import {eq, lessEq, notEq, more, less, moreEq, andAnd, orOr, stringRegEx, keywords, numberRegEx} from './tokens';

@@ -1,6 +1,6 @@
 import {styled} from "styled-components"
-import {ExpressionObject, Expression} from "@shared/types/editor"
-import {colorStyles} from "@shared/constants"
+import {ExpressionObject, Expression} from "shared/types/editor"
+import {colorStyles} from "shared/constants"
 
 const ExpressionObjectRenderer = ({object}: {object: ExpressionObject}) => {
   const {type, tokens, children, atomType} = object

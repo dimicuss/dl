@@ -1,4 +1,4 @@
-import {CItem} from '@shared/types/circulize'
+import {CItem} from 'shared/types/circulize'
 
 export function findCItem<T>(cItem: CItem<T> | undefined, p: (i: CItem<T>) => boolean) {
   let founded: CItem<T> | undefined

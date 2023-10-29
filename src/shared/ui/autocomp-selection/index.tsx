@@ -1,4 +1,4 @@
-import {AutoComp} from "@shared/types/autocomp"
+import {AutoComp} from "shared/types/autocomp"
 import {CSSProperties} from "react"
 import styled from "styled-components"
 

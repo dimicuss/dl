@@ -1,4 +1,4 @@
-import {LineBreak, Symbol} from '../types/editor'
+import {LineBreak} from '../types/editor'
 
 export const lineBreak: LineBreak = {}
 export const lBrace = '('
@@ -29,11 +29,3 @@ export const numberRegEx = /^-?\d+(\.\d+)?$/
 
 export const stringRegEx = /^[a-zA-Zа-яА-Я0-9]+$/
 
-export const delimiters: Symbol[] = [
-  eq,
-  more,
-  less,
-  not,
-  and,
-  or
-]

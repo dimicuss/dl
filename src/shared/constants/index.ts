@@ -1,4 +1,4 @@
-import {Atom, Expression} from "@shared/types/editor"
+import {Atom, Expression} from "shared/types/editor"
 
 export const colorMap = new Map<Expression | Atom, string>([
   [Atom.Invalid, 'red'],

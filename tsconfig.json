@@ -9,9 +9,7 @@
     "forceConsistentCasingInFileNames": true,
     "jsx": "react-jsx",
     "allowUmdGlobalAccess": true,
-    "paths": {
-      "@shared/*": ["./src/shared/*"]
-    },
+    "baseUrl": "./src",
     "isolatedModules": true
   },
   "$schema": "https://json.schemastore.org/tsconfig",

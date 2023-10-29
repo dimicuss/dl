@@ -1,4 +1,4 @@
-import {CItem} from "@shared/types/circulize";
+import {CItem} from "shared/types/circulize";
 import {CharPosition, CharRange, TokenObject, Tokens} from "../types/editor";
 import {rBrace, lBrace, whiteSpace, lineBreak, eq, not, more, less, and, or} from "./tokens";
 

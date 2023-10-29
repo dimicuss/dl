@@ -1,4 +1,4 @@
-import {ExpressionObject} from '@shared/types/editor'
+import {ExpressionObject} from 'shared/types/editor'
 
 export function forEachTree(tree: ExpressionObject, fn: (tree: ExpressionObject, chain: ExpressionObject[]) => void, parentChain: ExpressionObject[] = []) {
   const {children} = tree
