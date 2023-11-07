@@ -1,10 +1,7 @@
-import {useEffect, useRef, useState} from "react"
+import {useCallback, useEffect, useRef, useState} from "react"
 import {EditorState, Transaction} from "prosemirror-state"
 import {EditorView} from "prosemirror-view"
-import {keymap} from "prosemirror-keymap"
-import {undo, redo, history} from "prosemirror-history"
 import {Mark, MarkSpec, Schema} from "prosemirror-model"
-import {baseKeymap} from "prosemirror-commands"
 import {Atom, Expression, ExpressionObject} from "../../types/editor"
 import {getTokens} from "shared/lib/getTokens"
 import {getCharPositions} from "shared/lib/getCharPositions"
@@ -13,10 +10,8 @@ import {getSyntaxTree} from "shared/lib/getSyntaxTree"
 import ProseMirrorStyles from 'prosemirror-view/style/prosemirror.css'
 import {Tree} from "../tree"
 import {styled} from "styled-components"
-import {colorStyles} from "shared/constants"
+import {colorStyles, plugins} from "shared/constants"
 import {AutoCompSelection} from "shared/ui/autocomp-selection"
-import {AutoComp} from "shared/types/autocomp"
-import {getAutoCompMap} from "shared/lib/getAutoCompMap"
 import {Error} from "../error"
 
 const initialState = {
@@ -72,104 +67,84 @@ const initialState = {
 export const Editor = () => {
   const [tree, setTree] = useState<ExpressionObject[]>([])
   const [editorState, setEditorState] = useState<EditorState | undefined>()
-  const [autoComp, setAutoComp] = useState<AutoComp | undefined>()
   const ref = useRef<HTMLDivElement | null>(null)
+  const viewRef = useRef<EditorView | undefined>()
+
 
   useEffect(() => {
-    const windowSelection = window.getSelection()
-    if (windowSelection && windowSelection.type === 'Caret') {
-      if (editorState) {
-        const {x, y} = windowSelection.getRangeAt(0).getBoundingClientRect()
-        const completions = tree
-          .map((t) => getAutoCompMap(t, editorState).get(editorState.selection.anchor))
-          .find(Boolean)
-
-        if (completions && x > 0 && y > 0) {
-          setAutoComp({
-            x,
-            y,
-            completions
-          })
-        } else {
-          setAutoComp(undefined)
+    if (ref.current) {
+      const colorMarks = [...Object.values(Atom), ...Object.values(Expression)].reduce((acc, type) => ({
+        ...acc,
+        [type]: {
+          toDOM: () => ['span', {class: String(type)}],
         }
-      }
-    } else {
-      setAutoComp(undefined)
-    }
-  }, [editorState, tree])
+      }), {} as Record<string, MarkSpec>)
 
-  useEffect(() => {
-    const colorMarks = [...Object.values(Atom), ...Object.values(Expression)].reduce((acc, type) => ({
-      ...acc,
-      [type]: {
-        toDOM: () => ['span', {class: String(type)}],
-      }
-    }), {} as Record<string, MarkSpec>)
-
-    const schema = new Schema({
-      marks: {
-        error: {
-          attrs: {
-            'data-error': {
-              default: undefined,
-            }
+      const schema = new Schema({
+        marks: {
+          error: {
+            attrs: {
+              'data-error': {
+                default: undefined,
+              }
+            },
+            toDOM: (mark: Mark) => ['span', {class: 'error', ...mark.attrs}],
           },
-          toDOM: (mark: Mark) => ['span', {class: 'error', ...mark.attrs}],
+          ...colorMarks,
         },
-        ...colorMarks,
-      },
-      nodes: {
-        doc: {
-          content: 'paragraph+',
-          toDom: () => ['div', 0]
+        nodes: {
+          doc: {
+            content: 'paragraph+',
+            toDom: () => ['div', 0]
+          },
+          paragraph: {
+            content: 'text*',
+            marks: '_',
+            toDOM: () => ['p', {class: 'p'}, 0],
+          },
+          text: {}
         },
-        paragraph: {
-          content: 'text*',
-          marks: '_',
-          toDOM: () => ['p', {class: 'p'}, 0],
-        },
-        text: {}
-      },
-    })
+      })
 
-    const plugins = [
-      history(),
-      keymap({
-        ...baseKeymap,
-        'Mod-z': undo,
-        'Mod-y': redo,
-      }),
-    ]
-    const view = new EditorView(ref.current, {
-      attributes: {
-        class: 'doc'
-      },
-      state: EditorState.fromJSON({
-        schema,
-        plugins,
-      }, initialState),
-      dispatchTransaction(t) {
-        if (t.docChanged) {
-          const {colorizedState, tree} = handleCurrentTransaction(t, schema)
-          setTree(tree)
-          view.updateState(view.state.apply(colorizedState))
-        } else {
-          view.updateState(view.state.apply(t))
+      const view = new EditorView(ref.current, {
+        attributes: {
+          class: 'doc'
+        },
+        state: EditorState.fromJSON({
+          schema,
+          plugins,
+        }, initialState),
+        dispatchTransaction(t) {
+          if (t.docChanged) {
+            const {colorizedState, tree} = handleCurrentTransaction(t, schema)
+            setTree(tree)
+            view.updateState(view.state.apply(colorizedState))
+          } else {
+            view.updateState(view.state.apply(t))
+          }
+
+          setEditorState(view.state)
         }
+      })
 
-        setEditorState(view.state)
+      const {colorizedState, tree} = handleCurrentTransaction(view.state.tr, schema)
+      view.dispatch(colorizedState)
+
+      setTree(tree)
+      setEditorState(view.state)
+
+      viewRef.current = view
+
+      return () => {
+        view.destroy()
       }
-    })
-
-    const {colorizedState, tree} = handleCurrentTransaction(view.state.tr, schema)
-    view.dispatch(colorizedState)
-    setTree(tree)
-    setEditorState(view.state)
-
-    return () => {
-      view.destroy()
     }
+
+    return () => {}
+  }, [])
+
+  const getView = useCallback(() => {
+    return viewRef.current
   }, [])
 
   return (
@@ -178,15 +153,14 @@ export const Editor = () => {
         <div ref={ref} />
       </Container>
       <Tree tree={tree} />
-      {autoComp && <AutoCompSelection object={autoComp} />}
+      <AutoCompSelection tree={tree} getView={getView} editorState={editorState} />
       <Error />
     </>
   )
 }
 
 function handleCurrentTransaction(t: Transaction, schema: Schema) {
-  const tokens = getTokens(getCharPositions(t.doc))
-  const tree = getSyntaxTree(tokens)
+  const tree = getSyntaxTree(getTokens(getCharPositions(t.doc)))
   const colorizedState = colorize(t.removeMark(0, t.doc.content.size), schema, tree)
 
   return {
