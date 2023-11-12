@@ -30,6 +30,10 @@ export const Tree = ({view}: {view: EditorView}) => {
         setTree(dlPlugin.getState(view.state) || [])
       }
     })
+
+    return () => {
+      view.setProps({dispatchTransaction: undefined})
+    }
   }, [view])
 
   return (
