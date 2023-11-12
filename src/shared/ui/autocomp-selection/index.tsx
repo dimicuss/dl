@@ -59,16 +59,24 @@ export const AutoCompSelection = ({tree, editorState, getView}: Props) => {
         }
 
         if (key === 'Enter') {
+          console.log('Perform autocomp')
         }
       } else {
         setAutoCompPos(0)
       }
     }
 
+    const handleScroll = () => {
+      setAutoComp(undefined)
+      setAutoCompPos(0)
+    }
+
     window.addEventListener('keydown', handleKeyDown)
+    document.addEventListener('scroll', handleScroll)
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('scroll', handleScroll)
     }
   }, [])
 

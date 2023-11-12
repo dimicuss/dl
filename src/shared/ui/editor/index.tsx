@@ -13,6 +13,7 @@ import {styled} from "styled-components"
 import {colorStyles, plugins} from "shared/constants"
 import {AutoCompSelection} from "shared/ui/autocomp-selection"
 import {Error} from "../error"
+import {handleCurrentTransaction} from "shared/lib/handleCurrentTransaction"
 
 const initialState = {
   "doc": {
@@ -23,7 +24,7 @@ const initialState = {
         "content": [
           {
             "type": "text",
-            "text": "Возраст>=a&&(Отчество<=b||((Фамилия != c) && Имя = d)) ||",
+            "text": "Возраст>=\"a\"&&(Отчество<=\"b\"||((Фамилия != \"c\") && Имя = \"d\")) ||",
           }
         ]
       },
@@ -32,7 +33,7 @@ const initialState = {
         "content": [
           {
             "type": "text",
-            "text": "Фамилия > d ||",
+            "text": "Фамилия > \"d\" ||",
           }
         ]
       },
@@ -41,7 +42,7 @@ const initialState = {
         "content": [
           {
             "type": "text",
-            "text": "Фамилия >= f && Имя = g && Отчество < h",
+            "text": "Фамилия >= \"f\" && Имя = \"g\" && Отчество < \"h\"",
 
           }
         ]
@@ -157,16 +158,6 @@ export const Editor = () => {
       <Error />
     </>
   )
-}
-
-function handleCurrentTransaction(t: Transaction, schema: Schema) {
-  const tree = getSyntaxTree(getTokens(getCharPositions(t.doc)))
-  const colorizedState = colorize(t.removeMark(0, t.doc.content.size), schema, tree)
-
-  return {
-    tree,
-    colorizedState,
-  }
 }
 
 const Container = styled.div`

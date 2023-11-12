@@ -1,6 +1,6 @@
 import {CItem} from "shared/types/circulize";
 import {CharPosition, TokenObject, Tokens} from "../types/editor";
-import {rBrace, lBrace, whiteSpace, lineBreak, eq, not, more, less, and, or} from "shared/constants";
+import {rBrace, lBrace, whiteSpace, lineBreak, eq, not, more, less, and, or, quote} from "shared/constants";
 
 function getToken(type: Tokens, ...chars: CharPosition[]): TokenObject {
   const range = chars.reduce((result, {char}) => result + char, '')
@@ -19,96 +19,100 @@ function getToken(type: Tokens, ...chars: CharPosition[]): TokenObject {
 
 export function getTokens(chars: CharPosition[]): CItem<TokenObject> | undefined {
   let result: CItem<TokenObject> | undefined
+  let currentResult: CItem<TokenObject> | undefined
 
-  const linkResult = (type: Tokens, ...chars: CharPosition[]) => {
+  const linkCurrentResult = (type: Tokens, ...chars: CharPosition[]) => {
     const newItem = getToken(type, ...chars)
 
-    if (result) {
-      const newResult = {
+    if (currentResult) {
+      const newCurrentResult = {
         i: newItem,
-        n: result
+        p: currentResult
       }
 
-      result.p = newResult
-      result = newResult
+      currentResult.n = newCurrentResult
+      currentResult = newCurrentResult
     } else {
-      result = {
+      currentResult = {
         i: newItem
       }
+      result = currentResult
     }
   }
 
-  const replaceResult = (newItem: TokenObject) => {
-    if (result) {
-      const newResult = {
-        i: newItem,
-        n: result?.n
-      }
-
-      if (result.n) {
-        result.n.p = newResult
-      }
-      result = newResult
-    } else {
-      result = {
-        i: newItem
-      }
-    }
-  }
-
-  for (let i = chars.length - 1; i >= 0; i--) {
+  for (let i = 0; i < chars.length; i++) {
     const c = chars[i] as CharPosition
     const pC = chars[i - 1]
     const nC = chars[i + 1]
 
-    if (c.char === eq) {
-      if (pC?.char === not || pC?.char === more || pC?.char === less) {
-        linkResult(Tokens.Expression, pC, c)
-        i--
-      } else {
-        linkResult(Tokens.Expression, c)
-      }
-    } else if (c.char === more || c.char === less) {
-      linkResult(Tokens.Expression, c)
-    } else if (c.char === or) {
-      if (pC?.char === or) {
-        linkResult(Tokens.Expression, pC, c)
-        i--
-      } else {
-        linkResult(Tokens.Atom, c)
-      }
-    } else if (c.char === and) {
-      if (pC?.char === and) {
-        linkResult(Tokens.Expression, pC, c)
-        i--
-      } else {
-        linkResult(Tokens.Atom, c)
-      }
-    } else if (c.char === not) {
-      linkResult(Tokens.Atom, c)
-    } else if (c.char === lBrace) {
-      linkResult(Tokens.LBrace, c)
-    } else if (c.char === rBrace) {
-      linkResult(Tokens.RBrace, c)
-    }
-    else if (c.char === whiteSpace || c.char === lineBreak) {
-      continue
-    } else {
-      if (result?.i?.type === Tokens.Atom && (nC?.char !== whiteSpace && nC?.char !== lineBreak)) {
-        replaceResult({
-          type: Tokens.Atom,
-          charRange: {
-            start: c.pos,
-            end: result.i.charRange.end,
-            range: c.char + result.i.charRange.range
-          }
-        })
-      } else {
-        linkResult(Tokens.Atom, c)
-      }
-    }
+    if (c.char !== whiteSpace && c.char !== lineBreak) {
+      if (c.char === quote) {
+        const quotedChars: CharPosition[] = [c]
 
+        let j = i + 1
+        while (j < chars.length) {
+          const cJ = chars[j] as CharPosition
+
+          if (cJ.char !== lineBreak) {
+            quotedChars.push(cJ)
+          }
+
+          if (cJ.char === quote) {
+            break
+          }
+
+          j++
+        }
+
+        linkCurrentResult(Tokens.Atom, ...quotedChars)
+        i = j
+      } else if (c.char === more || c.char === less) {
+        if (nC?.char === eq) {
+          linkCurrentResult(Tokens.Expression, c, nC)
+          i++
+        } else {
+          linkCurrentResult(Tokens.Expression, c)
+        }
+      } else if (c.char === or) {
+        if (nC?.char === or) {
+          linkCurrentResult(Tokens.Expression, c, nC)
+          i++
+        } else {
+          linkCurrentResult(Tokens.Atom, c)
+        }
+      } else if (c.char === and) {
+        if (nC?.char === and) {
+          linkCurrentResult(Tokens.Expression, c, nC)
+          i++
+        } else {
+          linkCurrentResult(Tokens.Atom, c)
+        }
+      } else if (c.char === not) {
+        if (nC?.char === eq) {
+          linkCurrentResult(Tokens.Expression, c, nC)
+          i++
+        } else {
+          linkCurrentResult(Tokens.Atom, c)
+        }
+      } else if (c.char === eq) {
+        linkCurrentResult(Tokens.Expression, c)
+      } else if (c.char === lBrace) {
+        linkCurrentResult(Tokens.LBrace, c)
+      } else if (c.char === rBrace) {
+        linkCurrentResult(Tokens.RBrace, c)
+      } else if (currentResult?.i?.type === Tokens.Atom && (pC?.char !== whiteSpace && pC?.char !== lineBreak)) {
+        currentResult.i.charRange = {
+          start: currentResult.i.charRange.start,
+          end: c.pos,
+          range: currentResult.i.charRange.range + c.char
+        }
+      } else {
+        linkCurrentResult(Tokens.Atom, c)
+      }
+    }
   }
+
+  console.log(result)
 
   return result
 }

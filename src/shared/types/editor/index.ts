@@ -19,6 +19,7 @@ export enum Tokens {
   LineBreak = 'line_break',
   WhiteSpace = 'white_space',
   Expression = 'expression',
+  Quoted = 'equoted',
   Atom = 'atom',
 }
 

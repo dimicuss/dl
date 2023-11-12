@@ -2,8 +2,7 @@ import {baseKeymap} from "prosemirror-commands"
 import {history, undo, redo} from "prosemirror-history"
 import {keymap} from "prosemirror-keymap"
 import {Atom, Expression} from "shared/types/editor"
-
-keymap
+import {LineBreak} from 'shared/types/editor'
 
 export const colorMap = new Map<Expression | Atom, string>([
   [Atom.Invalid, 'red'],
@@ -26,8 +25,6 @@ export const colorStyles = [...colorMap]
   .join('\n')
 
 
-import {LineBreak} from 'shared/types/editor'
-
 export const lineBreak: LineBreak = {}
 export const lBrace = '('
 export const rBrace = ')'
@@ -46,6 +43,7 @@ export const and = '&'
 export const not = '!'
 export const more = '>'
 export const less = '<'
+export const quote = '"'
 
 export const orOr = `${or}${or}`
 export const notEq = `${not}${eq}`
@@ -55,7 +53,7 @@ export const andAnd = `${and}${and}`
 
 export const numberRegEx = /^-?\d+(\.\d+)?$/
 
-export const stringRegEx = /^[a-zA-Zа-яА-Я0-9]+$/
+export const stringRegEx = /^".*"$/
 
 export const plugins = [
   history(),
