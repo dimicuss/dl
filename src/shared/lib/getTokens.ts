@@ -17,6 +17,8 @@ function getToken(type: Tokens, ...chars: CharPosition[]): TokenObject {
   }
 }
 
+const atomDelimiters = [quote, lineBreak, whiteSpace]
+
 export function getTokens(chars: CharPosition[]): CItem<TokenObject> | undefined {
   let result: CItem<TokenObject> | undefined
   let currentResult: CItem<TokenObject> | undefined
@@ -100,7 +102,7 @@ export function getTokens(chars: CharPosition[]): CItem<TokenObject> | undefined
         linkCurrentResult(Tokens.LBrace, c)
       } else if (c.char === rBrace) {
         linkCurrentResult(Tokens.RBrace, c)
-      } else if (currentResult?.i?.type === Tokens.Atom && (pC?.char !== whiteSpace && pC?.char !== lineBreak)) {
+      } else if (currentResult?.i?.type === Tokens.Atom && (pC?.char === undefined || !atomDelimiters.includes(pC.char))) {
         currentResult.i.charRange = {
           start: currentResult.i.charRange.start,
           end: c.pos,
@@ -111,8 +113,6 @@ export function getTokens(chars: CharPosition[]): CItem<TokenObject> | undefined
       }
     }
   }
-
-  console.log(result)
 
   return result
 }
