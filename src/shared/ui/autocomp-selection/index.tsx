@@ -1,23 +1,24 @@
 import {AutoComp} from "shared/types/autocomp"
 import {CSSProperties, useEffect, useState} from "react"
 import styled from "styled-components"
-import {ExpressionObject} from "shared/types/editor"
 import {EditorView} from "prosemirror-view"
-import {EditorState} from "prosemirror-state"
 import {getAutoCompMap} from "shared/lib/getAutoCompMap"
 import {useRefValue} from "shared/lib/useRefValue"
-import {plugins} from "shared/constants"
+import {dlKey} from "shared/lib/dlPlugin"
 
-export const AutoCompSelection = ({tree, editorState, getView}: Props) => {
+export const AutoCompSelection = ({view}: Props) => {
   const [autoComp, setAutoComp] = useState<AutoComp | undefined>()
   const [autoCompPos, setAutoCompPos] = useState(0)
   const getAutoComp = useRefValue(autoComp)
+  const getAutoCompPos = useRefValue(autoCompPos)
 
   useEffect(() => {
-    const windowSelection = window.getSelection()
-    const view = getView()
-    if (view) {
-      if (editorState && tree && windowSelection && windowSelection.type === 'Caret') {
+    const handleSelectionChange = () => {
+      const windowSelection = window.getSelection()
+      const editorState = view.state
+      const tree = dlKey.getState(editorState) || []
+
+      if (windowSelection && windowSelection.type === 'Caret') {
         const {x, y} = windowSelection.getRangeAt(0).getBoundingClientRect()
         const completions = tree
           .map((t) => getAutoCompMap(t, editorState).get(editorState.selection.anchor))
@@ -29,56 +30,64 @@ export const AutoCompSelection = ({tree, editorState, getView}: Props) => {
             y,
             completions
           })
-          view.updateState(view.state.reconfigure({plugins: []}))
         } else {
           setAutoComp(undefined)
-          view.updateState(view.state.reconfigure({plugins}))
         }
       } else {
         setAutoComp(undefined)
-        view.updateState(view.state.reconfigure({plugins}))
       }
     }
-  }, [tree, editorState])
+
+    document.addEventListener('selectionchange', handleSelectionChange)
+
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange)
+    }
+  }, [view])
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const autoComp = getAutoComp()
-      const view = getView()
-      if (autoComp && view) {
-        const {key} = e
+    view.setProps({
+      handleKeyDown: (_, e) => {
+        const autoComp = getAutoComp()
+        const autoCompPos = getAutoCompPos()
+        if (autoComp) {
+          const {key} = e
 
-        if (key === 'ArrowUp') {
-          e.preventDefault()
-          setAutoCompPos((pos) => Math.max(pos - 1, 0))
-        }
+          if (key === 'ArrowUp') {
+            setAutoCompPos((pos) => Math.max(pos - 1, 0))
+            return true
+          }
 
-        if (key === 'ArrowDown') {
-          e.preventDefault()
-          setAutoCompPos((pos) => Math.min(pos + 1, autoComp.completions.length - 1))
-        }
+          if (key === 'ArrowDown') {
+            setAutoCompPos((pos) => Math.min(pos + 1, autoComp.completions.length - 1))
+            return true
+          }
 
-        if (key === 'Enter') {
-          console.log('Perform autocomp')
+          if (key === 'Enter') {
+            const autoCompletion = autoComp.completions[autoCompPos] as string
+            view.dispatch(view.state.tr.insertText(autoCompletion))
+            setAutoComp(undefined)
+            setAutoCompPos(0)
+            return true
+          }
+        } else {
+          setAutoCompPos(0)
         }
-      } else {
-        setAutoCompPos(0)
       }
-    }
+    })
 
     const handleScroll = () => {
       setAutoComp(undefined)
       setAutoCompPos(0)
     }
 
-    window.addEventListener('keydown', handleKeyDown)
     document.addEventListener('scroll', handleScroll)
 
     return () => {
-      window.removeEventListener('keydown', handleKeyDown)
+      view.setProps({handleKeyDown: undefined})
       document.removeEventListener('scroll', handleScroll)
     }
-  }, [])
+  }, [view])
 
   if (autoComp) {
     const {x, y, completions} = autoComp
@@ -102,9 +111,7 @@ export const AutoCompSelection = ({tree, editorState, getView}: Props) => {
 }
 
 interface Props {
-  tree: ExpressionObject[]
-  editorState: EditorState | undefined
-  getView: () => EditorView | undefined
+  view: EditorView
 }
 
 const Container = styled.div`

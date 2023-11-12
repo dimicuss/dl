@@ -1,6 +1,3 @@
-import {baseKeymap} from "prosemirror-commands"
-import {history, undo, redo} from "prosemirror-history"
-import {keymap} from "prosemirror-keymap"
 import {Atom, Expression} from "shared/types/editor"
 import {LineBreak} from 'shared/types/editor'
 
@@ -54,12 +51,3 @@ export const andAnd = `${and}${and}`
 export const numberRegEx = /^-?\d+(\.\d+)?$/
 
 export const stringRegEx = /^".*"$/
-
-export const plugins = [
-  history(),
-  keymap({
-    ...baseKeymap,
-    'Mod-z': undo,
-    'Mod-y': redo,
-  }),
-]
